@@ -1,5 +1,5 @@
 from datetime import timedelta
-import os
+import os, ast
 from dotenv import load_dotenv
 from flask import Flask
 from flask_mail import Mail
@@ -24,7 +24,11 @@ app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS').lower() in ['true', 'on',
 app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL').lower() in ['true', 'on', '1']
 app.config['MAIL_USERNAME'] = os.getenv('EMAIL_USER')
 app.config['MAIL_PASSWORD'] = os.getenv('EMAIL_PASS')
-app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
+# Učitaj string iz .env fajla
+mail_default_sender = os.getenv('MAIL_DEFAULT_SENDER')
+
+# Konvertuj string u tuple
+app.config['MAIL_DEFAULT_SENDER'] = ast.literal_eval(mail_default_sender)
 
 mail = Mail(app)
 

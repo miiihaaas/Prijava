@@ -61,12 +61,22 @@ def application_form():
     school_name = os.getenv('SCHOOL_NAME')
     school_phone = os.getenv('SCHOOL_PHONE')
     school_email = os.getenv('SCHOOL_EMAIL_GENERAL')
+    school_web_address = os.getenv('SCHOOL_WEB_ADDRESS')
     return render_template('application_form.html', 
                             school_name=school_name, 
                             school_phone=school_phone, 
-                            school_email=school_email, 
+                            school_email=school_email,
+                            school_web_address=school_web_address,
                             form=form)
 
 @app.route('/confirmation')
 def confirmation():
-    return render_template('confirmation.html')
+    school_name = os.getenv('SCHOOL_NAME')
+    school_phone = os.getenv('SCHOOL_PHONE')
+    school_email = os.getenv('SCHOOL_EMAIL_GENERAL')
+    school_web_address = os.getenv('SCHOOL_WEB_ADDRESS')
+    return render_template('confirmation.html',
+                            school_name=school_name, 
+                            school_phone=school_phone, 
+                            school_email=school_email,
+                            school_web_address=school_web_address)
