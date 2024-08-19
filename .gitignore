@@ -1,3 +1,17 @@
+# Manual added
+#TODO: komanda za brisanje fajlova sa gita: git rm -r --cached .\your\file\destination\file.extension
+
+prijava/__pycache__//
+mojestado/static/reports/
+__pycache__/
+venv/
+venvPrijava/
+.vscode/
+
+#! iOS
+.DS_Store
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

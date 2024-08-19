@@ -1,0 +1,113 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Prijavni Formular</h2>
+    <form method="POST" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+        
+        <div class="form-group mb-3">
+            {{ form.children_name.label(class="form-label") }}
+            {{ form.children_name(class="form-control", placeholder="Unesite ime deteta") }}
+            {% for error in form.children_name.errors %}
+                <div class="text-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+        
+        <div class="form-group mb-3">
+            {{ form.children_surname.label(class="form-label") }}
+            {{ form.children_surname(class="form-control", placeholder="Unesite prezime deteta") }}
+            {% for error in form.children_surname.errors %}
+                <div class="text-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group mb-3">
+            {{ form.mother_name.label(class="form-label") }}
+            {{ form.mother_name(class="form-control", placeholder="Unesite ime majke") }}
+            {% for error in form.mother_name.errors %}
+                <div class="text-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group mb-3">
+            {{ form.mother_surname.label(class="form-label") }}
+            {{ form.mother_surname(class="form-control", placeholder="Unesite prezime majke") }}
+            {% for error in form.mother_surname.errors %}
+                <div class="text-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group mb-3">
+            {{ form.father_name.label(class="form-label") }}
+            {{ form.father_name(class="form-control", placeholder="Unesite ime oca") }}
+            {% for error in form.father_name.errors %}
+                <div class="text-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group mb-3">
+            {{ form.father_surname.label(class="form-label") }}
+            {{ form.father_surname(class="form-control", placeholder="Unesite prezime oca") }}
+            {% for error in form.father_surname.errors %}
+                <div class="text-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group mb-3">
+            {{ form.grade.label(class="form-label") }}
+            {{ form.grade(class="form-select") }}
+            {% for error in form.grade.errors %}
+                <div class="text-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group mb-3">
+            {{ form.class_number.label(class="form-label") }}
+            {{ form.class_number(class="form-select") }}
+            {% for error in form.class_number.errors %}
+                <div class="text-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group mb-3">
+            {{ form.documents.label(class="form-label") }}
+            {{ form.documents(class="form-control", multiple=True) }}
+            {% for error in form.documents.errors %}
+                <div class="text-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group mb-3">
+            <div class="form-check">
+                {{ form.consent(class="form-check-input", id="consentCheckbox") }}
+                {{ form.consent.label(class="form-check-label", for="consentCheckbox") }}
+                {% for error in form.consent.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="form-group">
+            {{ form.submit(class="btn btn-primary", id="submitButton") }}
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var consentCheckbox = document.getElementById('consentCheckbox');
+        var submitButton = document.getElementById('submitButton');
+    
+        // Disable submit button initially
+        submitButton.disabled = !consentCheckbox.checked;
+    
+        // Add event listener to checkbox
+        consentCheckbox.addEventListener('change', function() {
+            submitButton.disabled = !consentCheckbox.checked;
+        });
+    });
+    </script>
+{% endblock %}
