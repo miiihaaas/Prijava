@@ -176,3 +176,13 @@ h2 {
         padding: 7px 10px;
     }
 }
+
+.custom-link {
+    color: #0056b3; /* Boja linka */
+    text-decoration: none; /* Uklanja podvlačenje */
+    font-weight: bold; /* Podebljan tekst */
+}
+
+.custom-link:hover {
+    color: #003976; /* Boja linka na hover */
+}
