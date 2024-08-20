@@ -18,7 +18,7 @@ class ApplicationForm(FlaskForm):
                                 choices=[(str(i), str(i)) for i in range(1, 11)],
                                 validators=[DataRequired()])
     
-    documents = MultipleFileField ('Priložite dokumente (više fajlova mogu biti priloženi)', validators=[])
+    documents = MultipleFileField ('Priložite dokumente (po potrebi, priložite više fajlova odjednom)', validators=[])
     
     consent = BooleanField('Saglasan sam da škola za svoje potrebe obrađuje podatke iz dostavljene dokumentacije',
                             validators=[DataRequired()])
