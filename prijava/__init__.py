@@ -1,8 +1,11 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 import os, ast
 from dotenv import load_dotenv
 from flask import Flask
 from flask_mail import Mail
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from flask_login import LoginManager
 
 load_dotenv()
 
@@ -27,10 +30,25 @@ app.config['MAIL_PASSWORD'] = os.getenv('EMAIL_PASS')
 # Učitaj string iz .env fajla
 mail_default_sender = os.getenv('MAIL_DEFAULT_SENDER')
 
-# Konvertuj string u tuple
-app.config['MAIL_DEFAULT_SENDER'] = ast.literal_eval(mail_default_sender)
+# Konvertuj string u tuple ako postoji
+if mail_default_sender:
+    app.config['MAIL_DEFAULT_SENDER'] = ast.literal_eval(mail_default_sender)
 
+# Inicijalizacija ekstenzija
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 mail = Mail(app)
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+login_manager.login_message = 'Molimo prijavite se da biste pristupili ovoj stranici.'
+login_manager.login_message_category = 'info'
+
+# Učitavanje modela
+from prijava.models import User, Application
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 def create_app():
     from prijava import routes

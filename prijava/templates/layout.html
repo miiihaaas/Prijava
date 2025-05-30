@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="sr">
     <head>
         <!-- Required meta tags -->
         <meta charset="utf-8">
@@ -23,45 +23,66 @@
         <title>{{ title }}</title>
     </head>
     <body>
-        <header class="hero">
+        <header class="site-header">
             <!-- Navbar -->
-            <nav class="navbar navbar-expand-lg navbar-light bg-light">
-                <a class="navbar-brand" href="{{ school_web_address }}">{{ school_name }}</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav ms-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" href="tel:{{ school_phone }}">{{ school_phone }}</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="mailto:{{ school_email }}">{{ school_email }}</a>
-                        </li>
-                    </ul>
+            <nav class="navbar navbar-expand-lg">
+                <div class="container-fluid">
+                    <a class="navbar-brand" href="{{ school_web_address }}">{{ school_name }}</a>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <ul class="navbar-nav ms-auto">
+                            {% if current_user.is_authenticated %}
+                                <li class="nav-item">
+                                    <a class="nav-item nav-link {{ 'active' if request.endpoint in ['applications_list'] }}" href="{{ url_for('applications_list') }}">Prijave</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-item nav-link {{ 'active' if request.endpoint in ['application_form'] }}" href="{{ url_for('application_form') }}">Forma</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-item nav-link {{ 'active' if request.endpoint in ['logout'] }}" href="{{ url_for('logout') }}">Odjavi se</a>
+                                </li>
+                                {% else %}
+                                <li class="nav-item">
+                                    <a class="nav-item nav-link {{ 'active' if request.endpoint in ['application_form'] }}" href="{{ url_for('application_form') }}">Forma</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="tel:{{ school_phone }}">{{ school_phone }}</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="mailto:{{ school_email }}">{{ school_email }}</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </div>
                 </div>
             </nav>
         </header>
 
-        <main role="main">
+        <main role="main" class="container">
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
-                        <div class="alert alert-{{ category }}">
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
                             {{ message|safe }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
+                        <script>
+                            setTimeout(function() {
+                                $(".alert").alert('close');
+                            }, 15000);
+                        </script>
                     {% endfor %}
                 {% endif %}
             {% endwith %}
             {% block content %}{% endblock %}
         </main>
 
-        <footer class="footer bg-light text-center text-lg-start">
-            <div class="text-center p-3" 
-                style="background-color: rgba(0, 0, 0, 0.1);
-                    box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.3)">
+        <footer class="footer">
+            <div class="text-center nav-link p-3" style="background-color: rgba(0, 0, 0, 0.1); box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.3)">
                 2024 Softver razvio:
-                <a class="custom-link" href="https://implicit.pro/">Studio Implicit doo</a>
+                <a class="footer-link" href="https://implicit.pro/"><strong>Studio Implicit doo</strong></a>
             </div>
         </footer>
 
