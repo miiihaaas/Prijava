@@ -1,7 +1,7 @@
 from datetime import timedelta, datetime
 import os, ast
 from dotenv import load_dotenv
-from flask import Flask
+from flask import Flask, render_template
 from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -53,4 +53,26 @@ def load_user(user_id):
 def create_app():
     from prijava import routes
     return app
+
+# Error handlers
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template('errors/404.html'), 404
+
+@app.errorhandler(403)
+def forbidden_error(error):
+    return render_template('errors/403.html'), 403
+
+@app.errorhandler(500)
+def internal_error(error):
+    db.session.rollback()  # Poništi trenutnu transakciju u slučaju greške
+    return render_template('errors/500.html'), 500
+
+@app.errorhandler(400)
+def bad_request_error(error):
+    return render_template('errors/400.html'), 400
+
+@app.errorhandler(405)
+def method_not_allowed_error(error):
+    return render_template('errors/405.html'), 405
 

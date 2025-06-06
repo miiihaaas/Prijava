@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+{% block content %}
+    <div class="content-section py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-danger text-white">
+                        <h2 class="mb-0 text-white">Interna greška servera (500)</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            <h1 class="display-1">500</h1>
+                            <p class="lead">Došlo je do interne greške na serveru.</p>
+                            <hr>
+                            <p>Administratori su obavešteni o ovom problemu. Molimo pokušajte ponovo kasnije ili kontaktirajte administratora ako se problem nastavi.</p>
+                        </div>
+                        <div class="text-center">
+                            <a href="{{ url_for('application') }}" class="btn btn-outline-primary">Povratak na početnu stranicu</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

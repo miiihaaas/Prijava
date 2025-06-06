@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+{% block content %}
+    <div class="content-section py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-warning text-white">
+                        <h2 class="mb-0 text-white">Neispravan zahtev (400)</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            <h1 class="display-1">400</h1>
+                            <p class="lead">Poslali ste neispravan zahtev serveru.</p>
+                            <hr>
+                            <p>Molimo proverite podatke koje ste uneli i pokušajte ponovo.</p>
+                        </div>
+                        <div class="text-center">
+                            <a href="{{ url_for('application') }}" class="btn btn-outline-primary">Povratak na početnu stranicu</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
