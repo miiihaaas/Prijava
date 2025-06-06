@@ -193,7 +193,11 @@ def logout():
 # Glavne rute aplikacije
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/application_form', methods=['GET', 'POST'])
-def application_form():
+def index():
+    return "Forma za aplikaciju je privremeno nedostupna."
+
+@app.route('/application', methods=['GET', 'POST'])
+def application():
     # Generišemo jedinstveni formular ID pri svakom GET zahtevu
     if request.method == 'GET':
         session['form_id'] = str(datetime.utcnow().timestamp())
