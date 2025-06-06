@@ -2,7 +2,7 @@ import os
 from flask_mail import Message
 from datetime import datetime
 from prijava import app, mail, db
-from flask import render_template, request, redirect, url_for, flash, jsonify, abort
+from flask import render_template, request, redirect, url_for, flash, jsonify, abort, session
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 from prijava.form import ApplicationForm, LoginForm, SearchForm, RequestResetForm, ResetPasswordForm
@@ -194,8 +194,24 @@ def logout():
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/application_form', methods=['GET', 'POST'])
 def application_form():
+    # Generišemo jedinstveni formular ID pri svakom GET zahtevu
+    if request.method == 'GET':
+        session['form_id'] = str(datetime.utcnow().timestamp())
+    
     form = ApplicationForm()
+    
+    # Postavimo vrednost skrivenog polja form_id iz sesije
+    if 'form_id' in session:
+        form.form_id.data = session['form_id']
     if form.validate_on_submit():
+        # Provera da li je formular već poslat (zaštita od dupliranja)
+        if 'submitted_form_id' in session and session['submitted_form_id'] == request.form.get('form_id'):
+            flash('Ova prijava je već poslata. Molimo sačekajte.', 'info')
+            if 'application_id' in session:
+                return redirect(url_for('submission_details', application_id=session['application_id']))
+            else:
+                return redirect(url_for('confirmation'))
+        
         form_data = {
             'children_name': form.children_name.data,
             'children_surname': form.children_surname.data,
@@ -208,13 +224,25 @@ def application_form():
             'documents': form.documents.data, 
             'consent': form.consent.data
         }
+        
         # Sačuvaj podatke u bazi
         application = save_application_to_db(form_data)
-        # Pošalji email
-        send_email(form_data)
+        
+        # Sačuvaj ID aplikacije u sesiju za prikaz detalja
+        session['application_id'] = application.id
+        # Označi obrazac kao poslat
+        session['submitted_form_id'] = request.form.get('form_id')
+        
+        try:
+            # Pošalji email
+            send_email(form_data)
+        except Exception as e:
+            # Logiraj grešku, ali ne prikazuj korisniku tehničke detalje
+            app.logger.error(f"Email error: {str(e)}")
+            flash('Vaša prijava je sačuvana, ali postoji problem sa slanjem email obaveštenja.', 'warning')
         
         flash('Prijava je uspešno poslata.', 'success')
-        return redirect(url_for('confirmation'))
+        return redirect(url_for('submission_details', application_id=application.id))
     
     school_name = os.getenv('SCHOOL_NAME')
     school_phone = os.getenv('SCHOOL_PHONE')
@@ -238,6 +266,31 @@ def confirmation():
                             school_phone=school_phone, 
                             school_email=school_email,
                             school_web_address=school_web_address)
+
+@app.route('/submission_details/<int:application_id>')
+def submission_details(application_id):
+    # Proveri da li je ID aplikacije u sesiji isti kao traženi
+    session_app_id = session.get('application_id')
+    
+    # Zaštita - samo dozvoli pristup aplikaciji koja je u sesiji
+    if not session_app_id or int(session_app_id) != application_id:
+        flash('Nemate pristup ovim podacima.', 'danger')
+        return redirect(url_for('application_form'))
+    
+    # Pronađi aplikaciju u bazi
+    application = Application.query.get_or_404(application_id)
+    
+    school_name = os.getenv('SCHOOL_NAME')
+    school_phone = os.getenv('SCHOOL_PHONE')
+    school_email = os.getenv('SCHOOL_EMAIL_GENERAL')
+    school_web_address = os.getenv('SCHOOL_WEB_ADDRESS')
+    
+    return render_template('submission_details.html',
+                          application=application,
+                          school_name=school_name,
+                          school_phone=school_phone,
+                          school_email=school_email,
+                          school_web_address=school_web_address)
 
 # Admin rute
 @app.route('/admin')

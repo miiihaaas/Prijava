@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, SelectField, FileField, BooleanField, MultipleFileField, PasswordField, DateField
+from wtforms import StringField, SubmitField, SelectField, FileField, BooleanField, MultipleFileField, PasswordField, DateField, HiddenField
 from wtforms.validators import DataRequired, Regexp, Email, Length, EqualTo, ValidationError #, FileRequired
 from flask_wtf.file import FileAllowed
 
@@ -19,6 +19,7 @@ class ResetPasswordForm(FlaskForm):
     submit = SubmitField('Promeni lozinku')
 
 class ApplicationForm(FlaskForm):
+    form_id = HiddenField()
     children_name = StringField('Ime deteta', validators=[DataRequired()])
     children_surname = StringField('Prezime deteta', validators=[DataRequired()])
     mother_name = StringField('Ime majke', validators=[DataRequired()])
