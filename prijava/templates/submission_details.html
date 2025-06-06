@@ -9,9 +9,15 @@
         </div>
     </div>
     
+    {% if is_duplicate %}
+    <div class="alert alert-warning" role="alert">
+        <strong>Obaveštenje!</strong> Identična prijava već postoji u sistemu. Ovo su podaci postojeće prijave.
+    </div>
+{% else %}
     <div class="alert alert-success" role="alert">
         <strong>Uspešno!</strong> Vaša prijava je primljena i sačuvana u našoj bazi podataka.
     </div>
+{% endif %}
     
     <div class="row">
         <div class="col-md-12">
@@ -71,9 +77,9 @@
                             <p>
                                 <strong>Saglasnost:</strong> 
                                 {% if application.consent %}
-                                    <span class="badge bg-success">Data</span>
+                                    <span class="badge bg-success">Data saglasnost</span>
                                 {% else %}
-                                    <span class="badge bg-danger">Nije data</span>
+                                    <span class="badge bg-danger">Nije data saglasnost</span>
                                 {% endif %}
                             </p>
                         </div>

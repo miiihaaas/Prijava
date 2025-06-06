@@ -10,7 +10,25 @@ from prijava.models import User, Application
 from sqlalchemy import or_, and_, desc, asc
 
 def save_application_to_db(form_data):
-    # Kreiraj novi unos za prijavu
+    # Provera da li već postoji ista prijava u sistemu
+    existing_application = Application.query.filter(
+        Application.children_name == form_data['children_name'],
+        Application.children_surname == form_data['children_surname'],
+        Application.mother_name == form_data['mother_name'],
+        Application.mother_surname == form_data['mother_surname'],
+        Application.father_name == form_data['father_name'],
+        Application.father_surname == form_data['father_surname'],
+        Application.grade == form_data['grade'],
+        Application.class_number == form_data['class_number']
+    ).first()
+    
+    # Ako postoji, dodaj informaciju o duplikatu i vrati postojeću prijavu
+    if existing_application:
+        # Označavamo u sesiji da je prijava duplikat
+        session['duplicate_application'] = True
+        return existing_application
+    
+    # Nastavljamo sa kreiranjem nove prijave ako nema duplikata
     document_count = 0
     has_documents = False
     
@@ -38,6 +56,9 @@ def save_application_to_db(form_data):
     # Sačuvaj u bazi
     db.session.add(application)
     db.session.commit()
+    
+    # Označavamo u sesiji da nije duplikat
+    session['duplicate_application'] = False
     
     return application
 
@@ -217,12 +238,12 @@ def application():
                 return redirect(url_for('confirmation'))
         
         form_data = {
-            'children_name': form.children_name.data,
-            'children_surname': form.children_surname.data,
-            'mother_name': form.mother_name.data,
-            'mother_surname': form.mother_surname.data,
-            'father_name': form.father_name.data,
-            'father_surname': form.father_surname.data,
+            'children_name': form.children_name.data.strip().capitalize(),
+            'children_surname': form.children_surname.data.strip().capitalize(),
+            'mother_name': form.mother_name.data.strip().capitalize(),
+            'mother_surname': form.mother_surname.data.strip().capitalize(),
+            'father_name': form.father_name.data.strip().capitalize(),
+            'father_surname': form.father_surname.data.strip().capitalize(),
             'grade': form.grade.data,
             'class_number': form.class_number.data,
             'documents': form.documents.data, 
@@ -279,10 +300,13 @@ def submission_details(application_id):
     # Zaštita - samo dozvoli pristup aplikaciji koja je u sesiji
     if not session_app_id or int(session_app_id) != application_id:
         flash('Nemate pristup ovim podacima.', 'danger')
-        return redirect(url_for('application_form'))
+        return redirect(url_for('application'))
     
     # Pronađi aplikaciju u bazi
     application = Application.query.get_or_404(application_id)
+    
+    # Proveri da li je aplikacija duplikat
+    is_duplicate = session.get('duplicate_application', False)
     
     school_name = os.getenv('SCHOOL_NAME')
     school_phone = os.getenv('SCHOOL_PHONE')
@@ -291,6 +315,7 @@ def submission_details(application_id):
     
     return render_template('submission_details.html',
                           application=application,
+                          is_duplicate=is_duplicate,
                           school_name=school_name,
                           school_phone=school_phone,
                           school_email=school_email,
