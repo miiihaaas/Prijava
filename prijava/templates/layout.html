@@ -38,7 +38,7 @@
                                     <a class="nav-item nav-link {{ 'active' if request.endpoint in ['applications_list'] }}" href="{{ url_for('applications_list') }}">Prijave</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-item nav-link {{ 'active' if request.endpoint in ['application_form'] }}" href="{{ url_for('application_form') }}">Forma</a>
+                                    <a class="nav-item nav-link {{ 'active' if request.endpoint in ['application'] }}" href="{{ url_for('application') }}">Forma</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-item nav-link {{ 'active' if request.endpoint in ['logout'] }}" href="{{ url_for('logout') }}">Odjavi se</a>

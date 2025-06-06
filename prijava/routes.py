@@ -508,10 +508,10 @@ def applications_list():
                 
                 school_name = os.getenv('SCHOOL_NAME')
                 return render_template('applications_list.html',
-                                      school_name=school_name,
-                                      applications=applications,
-                                      form=form,
-                                      current_sort=sort)
+                                        school_name=school_name,
+                                        applications=applications,
+                                        form=form,
+                                        current_sort=sort)
             except Exception as e:
                 app.logger.error(f"Greška pri paginaciji ili renderovanju liste prijava: {str(e)}")
                 flash('Došlo je do greške pri pripremi prikaza podataka. Molimo pokušajte ponovo.', 'danger')
