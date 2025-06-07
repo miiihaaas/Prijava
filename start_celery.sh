@@ -6,19 +6,17 @@ VENV_PATH="/home/prijavao/virtualenv/prijava.online/0001/3.12"
 # Aktiviranje virtualnog okruženja
 source $VENV_PATH/bin/activate
 
-# Putanja do prijava direktorijuma
+# Putanja do glavnog direktorijuma
 PRIJAVA_PATH="/home/prijavao/prijava.online/0001"
 
-# Postavljanje environment varijabli
-export PYTHONPATH=$PRIJAVA_PATH:$PYTHONPATH
+# Putanja do Python modula
+PYTHON_MODULE_PATH="$PRIJAVA_PATH/Prijava"
 
-# Dodajemo direktorijum Prijava u PYTHONPATH ako postoji
-if [ -d "$PRIJAVA_PATH/Prijava" ]; then
-    export PYTHONPATH=$PRIJAVA_PATH/Prijava:$PYTHONPATH
-fi
+# Postavljanje environment varijabli
+export PYTHONPATH=$PYTHON_MODULE_PATH:$PYTHONPATH
 
 # Pokretanje Celery radnika
-cd $PRIJAVA_PATH
+cd $PYTHON_MODULE_PATH
 
-# Koristi samo 'prijava' kao modul, a ne prijava.celery_app.celery
-celery -A prijava.celery_app worker --loglevel=debug
+# Koristi ispravnu putanju do celery aplikacije
+celery -A Prijava.prijava.celery_app worker --loglevel=debug
