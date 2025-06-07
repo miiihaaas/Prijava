@@ -13,10 +13,13 @@ PRIJAVA_PATH="/home/prijavao/prijava.online/0001"
 PYTHON_MODULE_PATH="$PRIJAVA_PATH/Prijava"
 
 # Postavljanje environment varijabli
-export PYTHONPATH=$PYTHON_MODULE_PATH:$PYTHONPATH
+export PYTHONPATH=$PRIJAVA_PATH:$PYTHON_MODULE_PATH:$PYTHONPATH
+
+# Prikazujemo trenutni Python path za debug
+echo "PYTHONPATH = $PYTHONPATH"
 
 # Pokretanje Celery radnika
-cd $PYTHON_MODULE_PATH
+cd $PRIJAVA_PATH
 
 # Koristi ispravnu putanju do celery aplikacije
-celery -A Prijava.prijava.celery_app worker --loglevel=debug
+celery -A prijava.celery_app worker --loglevel=debug
