@@ -1,4 +1,5 @@
 import os
+import pathlib
 from flask_mail import Message
 from datetime import datetime
 from prijava import app, mail, db
@@ -9,6 +10,14 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from prijava.form import ApplicationForm, LoginForm, SearchForm, RequestResetForm, ResetPasswordForm
 from prijava.models import User, Application
 from sqlalchemy import or_, and_, desc, asc
+from prijava.tasks import send_email_task
+
+# Funkcija za kreiranje direktorijuma za priloge ako ne postoji
+def ensure_attachments_dir_exists():
+    """Proverava i kreira direktorijum za priloge ako ne postoji"""
+    attachments_dir = os.path.join(app.root_path, 'static', 'attachments')
+    pathlib.Path(attachments_dir).mkdir(parents=True, exist_ok=True)
+    return attachments_dir
 
 def save_application_to_db(form_data):
     try:
@@ -332,11 +341,43 @@ def application():
                     return redirect(url_for('application'))
                 
                 try:
-                    # Pošalji email
-                    send_email(form_data)
+                    # Proveri i kreiraj direktorijum za priloge ako ne postoji
+                    attachments_dir = ensure_attachments_dir_exists()
+                    
+                    # Sačuvaj dokumente u fajl sistem
+                    saved_files = []
+                    if 'documents' in form_data and any(form_data['documents']):
+                        for index, document in enumerate(form_data['documents']):
+                            if document:
+                                # Kreiramo ime fajla u formatu application.id-index
+                                file_name = f"{application.id}-{index}{os.path.splitext(document.filename)[1]}"
+                                file_path = os.path.join(attachments_dir, file_name)
+                                
+                                # Sačuvaj fajl
+                                document.save(file_path)
+                                
+                                # Dodaj informacije o fajlu u listu sačuvanih fajlova
+                                saved_files.append({
+                                    'path': file_path,
+                                    'filename': document.filename,
+                                    'mimetype': document.mimetype
+                                })
+                    
+                    # Kopiraj form_data i dodaj putanje do sačuvanih fajlova
+                    form_data_copy = form_data.copy()
+                    # Ukloni documents jer ne mogu da se serializuju
+                    if 'documents' in form_data_copy:
+                        form_data_copy.pop('documents')
+                    
+                    # Dodaj informacije o sačuvanim fajlovima
+                    form_data_copy['saved_files'] = saved_files
+                    
+                    # Pošalji email asinhrono sa informacijama o fajlovima
+                    task_result = send_email_task.delay(form_data_copy)
+                    app.logger.info(f"Email za prijavu {application.id} poslat asinhrono sa task ID: {task_result.id}")
                 except Exception as e:
                     # Logiraj grešku, ali ne prikazuj korisniku tehničke detalje
-                    app.logger.error(f"Email error: {str(e)}")
+                    app.logger.error(f"Greška pri slanju asinhronog email-a: {str(e)}")
                     flash('Vaša prijava je sačuvana, ali postoji problem sa slanjem email obaveštenja.', 'warning')
                 
                 flash('Prijava je uspešno poslata.', 'success')

@@ -43,6 +43,10 @@ login_manager.login_view = 'login'
 login_manager.login_message = 'Molimo prijavite se da biste pristupili ovoj stranici.'
 login_manager.login_message_category = 'info'
 
+# Inicijalizacija Celery
+from prijava.celery_app import make_celery
+celery = make_celery(app)
+
 # Učitavanje modela
 from prijava.models import User, Application
 
