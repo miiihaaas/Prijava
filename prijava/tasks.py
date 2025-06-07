@@ -2,10 +2,7 @@ import os
 import pathlib
 from flask_mail import Message
 from flask import current_app
-from prijava.celery_app import make_celery
-
-# Kreiramo Celery instancu
-celery = make_celery()
+from prijava.celery_app import celery
 
 @celery.task
 def send_email_task(form_data):

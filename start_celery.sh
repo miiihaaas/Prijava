@@ -12,6 +12,13 @@ PRIJAVA_PATH="/home/prijavao/prijava.online/0001"
 # Postavljanje environment varijabli
 export PYTHONPATH=$PRIJAVA_PATH:$PYTHONPATH
 
+# Dodajemo direktorijum Prijava u PYTHONPATH ako postoji
+if [ -d "$PRIJAVA_PATH/Prijava" ]; then
+    export PYTHONPATH=$PRIJAVA_PATH/Prijava:$PYTHONPATH
+fi
+
 # Pokretanje Celery radnika
 cd $PRIJAVA_PATH
-celery -A prijava.celery_app.celery worker --loglevel=info
+
+# Koristi samo 'prijava' kao modul, a ne prijava.celery_app.celery
+celery -A prijava.celery_app worker --loglevel=debug

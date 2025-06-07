@@ -1,5 +1,8 @@
 from celery import Celery
 
+# Kreiramo instancu celery direktno na nivou modula
+# Tako da se može importovati kao prijava.celery_app.celery
+
 def make_celery(app=None):
     """
     Kreira Celery instancu koja može da koristi Flask konfiguraciju
@@ -27,3 +30,6 @@ def make_celery(app=None):
         celery.Task = ContextTask
         
     return celery
+
+# Kreiramo celery instancu koja će biti dostupna kao prijava.celery_app.celery
+celery = make_celery()
