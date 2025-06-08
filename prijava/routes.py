@@ -35,12 +35,12 @@ def save_application_to_db(form_data):
     try:
         # Provera da li već postoji ista prijava u sistemu
         existing_application = Application.query.filter(
-            Application.children_name.lower() == form_data['children_name'].lower(),
-            Application.children_surname.lower() == form_data['children_surname'].lower(),
-            Application.mother_name.lower() == form_data['mother_name'].lower(),
-            Application.mother_surname.lower() == form_data['mother_surname'].lower(),
-            Application.father_name.lower() == form_data['father_name'].lower(),
-            Application.father_surname.lower() == form_data['father_surname'].lower(),
+            Application.children_name == form_data['children_name'].capitalize(),
+            Application.children_surname == form_data['children_surname'].capitalize(),
+            Application.mother_name == form_data['mother_name'].capitalize(),
+            Application.mother_surname == form_data['mother_surname'].capitalize(),
+            Application.father_name == form_data['father_name'].capitalize(),
+            Application.father_surname == form_data['father_surname'].capitalize(),
             Application.grade == form_data['grade'],
             Application.class_number == form_data['class_number']
         ).first()
@@ -62,12 +62,12 @@ def save_application_to_db(form_data):
                     has_documents = True
         
         application = Application(
-            children_name=form_data['children_name'],
-            children_surname=form_data['children_surname'],
-            mother_name=form_data['mother_name'],
-            mother_surname=form_data['mother_surname'],
-            father_name=form_data['father_name'],
-            father_surname=form_data['father_surname'],
+            children_name=form_data['children_name'].capitalize(),
+            children_surname=form_data['children_surname'].capitalize(),
+            mother_name=form_data['mother_name'].capitalize(),
+            mother_surname=form_data['mother_surname'].capitalize(),
+            father_name=form_data['father_name'].capitalize(),
+            father_surname=form_data['father_surname'].capitalize(),
             grade=form_data['grade'],
             class_number=form_data['class_number'],
             has_documents=has_documents,
