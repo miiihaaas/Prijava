@@ -374,7 +374,7 @@ def application():
                                 
                                 # Dodaj informacije o fajlu u listu sačuvanih fajlova
                                 saved_files.append({
-                                    'path': file_path,
+                                    'path': rel_path,
                                     'filename': document.filename,
                                     'mimetype': document.mimetype
                                 })
