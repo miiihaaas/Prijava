@@ -374,14 +374,14 @@ def application():
                                 
                                 # Dodaj informacije o fajlu u listu sačuvanih fajlova
                                 saved_files.append({
-                                    'path': rel_path,
+                                    'path': file_path,
                                     'filename': document.filename,
                                     'mimetype': document.mimetype
                                 })
                                 
                                 # Dodaj informacije za bazu podataka - koristimo samo ime fajla za kasnije dobijanje putanje
                                 attachment_data.append({
-                                    'path': file_path,
+                                    'path': rel_path,
                                     'filename': document.filename,
                                     'mimetype': document.mimetype
                                 })
