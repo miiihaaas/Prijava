@@ -64,7 +64,6 @@
                                 {% if application.has_documents %}
                                     <div class="mt-2">
                                         {% set attachment_files = application.attachment_paths|from_json if application.attachment_paths else [] %}
-                                        {{ attachment_files }}
                                         {% if attachment_files %}
                                             {% for file in attachment_files %}
                                                 <a href="{{ url_for('static', filename=file.path.replace('static/', '')) }}" target="_blank" class="btn btn-sm btn-outline-primary me-2 mb-2">
