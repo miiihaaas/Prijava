@@ -370,6 +370,7 @@ def application():
                                 
                                 # Sačuvaj fajl
                                 document.save(file_path)
+                                app.logger.info(f"Fajl sačuvan na putanji: {file_path}")
                                 
                                 # Dodaj informacije o fajlu u listu sačuvanih fajlova
                                 saved_files.append({
@@ -378,12 +379,17 @@ def application():
                                     'mimetype': document.mimetype
                                 })
                                 
-                                # Dodaj informacije za bazu podataka
+                                # Dodaj informacije za bazu podataka - koristimo samo ime fajla za kasnije dobijanje putanje
                                 attachment_data.append({
-                                    'path': rel_path,
+                                    'path': file_name,  # Samo ime fajla, bez punog puta
                                     'filename': document.filename,
                                     'mimetype': document.mimetype
                                 })
+                                app.logger.info(f"Podaci o fajlu dodati za bazu: {file_name}")
+                                app.logger.info(f"Apsolutna putanja: {file_path}")
+                                app.logger.info(f"Provera postojanja fajla: {os.path.exists(file_path)}")
+                                app.logger.info(f"Veličina fajla: {os.path.getsize(file_path) if os.path.exists(file_path) else 'Fajl ne postoji'}")
+                                
                         
                         # Sačuvaj podatke o prilozima u bazi
                         import json

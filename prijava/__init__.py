@@ -1,5 +1,8 @@
 from datetime import timedelta, datetime
 import os, ast
+import logging
+from logging.handlers import RotatingFileHandler
+import sys
 from dotenv import load_dotenv
 from flask import Flask, render_template
 from flask_mail import Mail
@@ -54,7 +57,46 @@ from prijava.models import User, Application
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+def configure_logging(app):
+    """Konfiguriše logging sistem za Flask aplikaciju"""
+    # Kreiraj logs direktorijum ako ne postoji
+    logs_dir = os.path.join(app.root_path, 'logs')
+    if not os.path.exists(logs_dir):
+        os.makedirs(logs_dir)
+    
+    # Konfiguracija formatera
+    formatter = logging.Formatter(
+        '[%(asctime)s] %(levelname)s u %(module)s: %(message)s'
+    )
+    
+    # Konfiguracija file handlera (RotatingFileHandler za rotaciju logova)
+    file_handler = RotatingFileHandler(
+        os.path.join(logs_dir, 'prijava.log'),
+        maxBytes=10485760,  # 10MB
+        backupCount=10
+    )
+    file_handler.setFormatter(formatter)
+    file_handler.setLevel(logging.INFO)
+    
+    # Konfiguracija console handlera
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setFormatter(formatter)
+    console_handler.setLevel(logging.DEBUG)
+    
+    # Dodaj handlere u app.logger
+    app.logger.addHandler(file_handler)
+    app.logger.addHandler(console_handler)
+    
+    # Postavi nivo logovanja
+    app.logger.setLevel(logging.INFO)
+    
+    app.logger.info('Prijava aplikacija pokrenuta')
+
+
 def create_app():
+    # Konfiguriši logger
+    configure_logging(app)
+    
     from prijava import routes
     return app
 
