@@ -381,11 +381,11 @@ def application():
                                 
                                 # Dodaj informacije za bazu podataka - koristimo samo ime fajla za kasnije dobijanje putanje
                                 attachment_data.append({
-                                    'path': file_name,  # Samo ime fajla, bez punog puta
+                                    'path': file_path,
                                     'filename': document.filename,
                                     'mimetype': document.mimetype
                                 })
-                                app.logger.info(f"Podaci o fajlu dodati za bazu: {file_name}")
+                                app.logger.info(f"Podaci o fajlu dodati za bazu: {file_path}")
                                 app.logger.info(f"Apsolutna putanja: {file_path}")
                                 app.logger.info(f"Provera postojanja fajla: {os.path.exists(file_path)}")
                                 app.logger.info(f"Veličina fajla: {os.path.getsize(file_path) if os.path.exists(file_path) else 'Fajl ne postoji'}")
