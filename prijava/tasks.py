@@ -66,15 +66,15 @@ def send_email_task(form_data):
             # Slanje mejla sa prilozima
             mail.send(msg)
             
-            # Brisanje privremenih fajlova nakon slanja
+            # Ne brišemo više fajlove nakon slanja
             if 'saved_files' in form_data and form_data['saved_files']:
                 for file_info in form_data['saved_files']:
                     try:
                         if os.path.exists(file_info['path']):
-                            os.remove(file_info['path'])
-                            current_app.logger.info(f"Privremeni fajl {file_info['path']} uspešno obrisan.")
+                            current_app.logger.info(f"Fajl {file_info['path']} zadržan za kasniju upotrebu.")
                     except Exception as e:
-                        current_app.logger.error(f"Greška pri brisanju privremenog fajla {file_info['path']}: {str(e)}")
+                        current_app.logger.error(f"Greška pri proveri fajla {file_info['path']}: {str(e)}")
+            
             
             current_app.logger.info(f'Email uspešno poslat na adrese: {recipients}')
             return True

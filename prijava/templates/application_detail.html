@@ -62,7 +62,18 @@
                             <p>
                                 <strong>Priloženi dokumenti:</strong> 
                                 {% if application.has_documents %}
-                                    <span class="badge bg-success">Da ({{ application.document_count }})</span>
+                                    <div class="mt-2">
+                                        {% set attachment_files = application.attachment_paths|from_json if application.attachment_paths else [] %}
+                                        {% if attachment_files %}
+                                            {% for file in attachment_files %}
+                                                <a href="{{ url_for('static', filename=file.path.replace('static/', '')) }}" target="_blank" class="btn btn-sm btn-outline-primary me-2 mb-2">
+                                                    <i class="fas fa-file-alt"></i> {{ file.filename }}
+                                                </a>
+                                            {% endfor %}
+                                        {% else %}
+                                            <span class="badge bg-success">Da ({{ application.document_count }})</span>
+                                        {% endif %}
+                                    </div>
                                 {% else %}
                                     <span class="badge bg-secondary">Ne</span>
                                 {% endif %}

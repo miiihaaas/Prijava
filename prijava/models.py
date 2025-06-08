@@ -44,6 +44,7 @@ class Application(db.Model):
     class_number = db.Column(db.String(10), nullable=False)
     has_documents = db.Column(db.Boolean, default=False)
     document_count = db.Column(db.Integer, default=0)
+    attachment_paths = db.Column(db.Text, default='{}')
     consent = db.Column(db.Boolean, nullable=False, default=False)
     date_submitted = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     
@@ -63,6 +64,7 @@ class Application(db.Model):
             'class_number': self.class_number,
             'has_documents': self.has_documents,
             'document_count': self.document_count,
+            'attachment_paths': self.attachment_paths,
             'consent': self.consent,
             'date_submitted': self.date_submitted.strftime('%Y-%m-%d %H:%M:%S')
         }

@@ -1,5 +1,6 @@
 import os
 import pathlib
+import json
 from flask_mail import Message
 from datetime import datetime
 from prijava import app, mail, db
@@ -12,6 +13,17 @@ from prijava.models import User, Application
 from sqlalchemy import or_, and_, desc, asc
 from prijava.tasks import send_email_task
 
+# Dodajemo filter za pretvaranje JSON stringa u Python objekat
+@app.template_filter('from_json')
+def from_json(value):
+    try:
+        if value:
+            return json.loads(value)
+        return []
+    except Exception as e:
+        app.logger.error(f"Greška pri pretvaranju JSON-a: {str(e)}")
+        return []
+
 # Funkcija za kreiranje direktorijuma za priloge ako ne postoji
 def ensure_attachments_dir_exists():
     """Proverava i kreira direktorijum za priloge ako ne postoji"""
@@ -23,12 +35,12 @@ def save_application_to_db(form_data):
     try:
         # Provera da li već postoji ista prijava u sistemu
         existing_application = Application.query.filter(
-            Application.children_name == form_data['children_name'],
-            Application.children_surname == form_data['children_surname'],
-            Application.mother_name == form_data['mother_name'],
-            Application.mother_surname == form_data['mother_surname'],
-            Application.father_name == form_data['father_name'],
-            Application.father_surname == form_data['father_surname'],
+            Application.children_name.lower() == form_data['children_name'].lower(),
+            Application.children_surname.lower() == form_data['children_surname'].lower(),
+            Application.mother_name.lower() == form_data['mother_name'].lower(),
+            Application.mother_surname.lower() == form_data['mother_surname'].lower(),
+            Application.father_name.lower() == form_data['father_name'].lower(),
+            Application.father_surname.lower() == form_data['father_surname'].lower(),
             Application.grade == form_data['grade'],
             Application.class_number == form_data['class_number']
         ).first()
@@ -60,6 +72,7 @@ def save_application_to_db(form_data):
             class_number=form_data['class_number'],
             has_documents=has_documents,
             document_count=document_count,
+            attachment_paths='{}',  # Inicijalno prazan JSON
             consent=form_data['consent'],
             date_submitted=datetime.utcnow()
         )
@@ -346,12 +359,14 @@ def application():
                     
                     # Sačuvaj dokumente u fajl sistem
                     saved_files = []
+                    attachment_data = []
                     if 'documents' in form_data and any(form_data['documents']):
                         for index, document in enumerate(form_data['documents']):
                             if document:
                                 # Kreiramo ime fajla u formatu application.id-index
                                 file_name = f"{application.id}-{index}{os.path.splitext(document.filename)[1]}"
                                 file_path = os.path.join(attachments_dir, file_name)
+                                rel_path = os.path.join('static', 'attachments', file_name)
                                 
                                 # Sačuvaj fajl
                                 document.save(file_path)
@@ -362,6 +377,18 @@ def application():
                                     'filename': document.filename,
                                     'mimetype': document.mimetype
                                 })
+                                
+                                # Dodaj informacije za bazu podataka
+                                attachment_data.append({
+                                    'path': rel_path,
+                                    'filename': document.filename,
+                                    'mimetype': document.mimetype
+                                })
+                        
+                        # Sačuvaj podatke o prilozima u bazi
+                        import json
+                        application.attachment_paths = json.dumps(attachment_data)
+                        db.session.commit()
                     
                     # Kopiraj form_data i dodaj putanje do sačuvanih fajlova
                     form_data_copy = form_data.copy()
