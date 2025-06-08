@@ -100,6 +100,9 @@ def create_app():
     from prijava import routes
     return app
 
+# Konfiguriši logging odmah
+configure_logging(app)
+
 # Error handlers
 @app.errorhandler(404)
 def not_found_error(error):
