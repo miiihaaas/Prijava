@@ -5,7 +5,7 @@ import io
 from flask_mail import Message
 from datetime import datetime
 from prijava import app, mail, db
-from flask import render_template, request, redirect, url_for, flash, jsonify, abort, session, send_file
+from flask import render_template, request, redirect, url_for, flash, jsonify, abort, session, send_file, current_app, make_response
 from sqlalchemy.exc import SQLAlchemyError
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -514,22 +514,16 @@ def admin_dashboard():
 @login_required
 def applications_list():
     try:
-        # Form i filtri
-        sort = request.args.get('sort', 'date_asc')  # Promena podrazumevanog sortiranja na najstarije → najnovije
-        query = Application.query
+        # Inicijalizacija forme za filtriranje
+        form = SearchForm()
         
-        # Popunjavamo inicijalne vrednosti forme iz URL parametara ako je u pitanju GET zahtev
-        search_term = request.args.get('search_term', '')
+        # Uzimamo inicijalne vrednosti filtera ako postoje u URL-u
         date_from = request.args.get('date_from', '')
         date_to = request.args.get('date_to', '')
         grade_filter = request.args.get('grade_filter', '')
         
-        form = SearchForm()
-        
         # Ako je u pitanju GET zahtev sa parametrima, inicijalizujemo formu sa tim vrednostima
-        if request.method == 'GET' and (search_term or date_from or date_to or grade_filter):
-            form.search_term.data = search_term
-            
+        if request.method == 'GET' and (date_from or date_to or grade_filter):
             # Parsiramo i inicijalizujemo date_from iz URL parametra
             if date_from:
                 try:
@@ -554,110 +548,23 @@ def applications_list():
             form.grade_filter.data = grade_filter
         
         try:
-            # Primeni filtere ako postoje
-            if form.validate_on_submit() or any([search_term, date_from, date_to, grade_filter]):
-                # Ako je forma validna, koristimo vrednosti iz forme
-                if form.validate_on_submit():
-                    search_term = form.search_term.data
-                    date_from = form.date_from.data
-                    date_to = form.date_to.data
-                    grade_filter = form.grade_filter.data
-                    
-                    # Redirektujemo na istu stranicu sa GET parametrima da bi se vrednosti sačuvale
-                    # i da bi se mogle ponovo koristiti pri paginaciji
-                    return redirect(url_for('applications_list', 
-                        search_term=search_term,
-                        date_from=date_from.strftime('%Y-%m-%dT%H:%M') if date_from else '',
-                        date_to=date_to.strftime('%Y-%m-%dT%H:%M') if date_to else '',
-                        grade_filter=grade_filter,
-                        sort=sort))
-                # Inače, koristimo vrednosti iz URL-a ako postoje
-                
-                # Filtriranje po pojmu za pretragu
-                if search_term:
-                    search_filter = or_(
-                        Application.children_name.ilike(f'%{search_term}%'),
-                        Application.children_surname.ilike(f'%{search_term}%'),
-                        Application.mother_name.ilike(f'%{search_term}%'),
-                        Application.mother_surname.ilike(f'%{search_term}%'),
-                        Application.father_name.ilike(f'%{search_term}%'),
-                        Application.father_surname.ilike(f'%{search_term}%')
-                    )
-                    query = query.filter(search_filter)
-                
-                # Filtriranje po datumu i vremenu od
-                if date_from:
-                    try:
-                        if isinstance(date_from, str):
-                            # Proveravamo format datuma sa vremenom
-                            if 'T' in date_from:  # Format iz datetime-local inputa
-                                date_from = datetime.strptime(date_from, '%Y-%m-%dT%H:%M')
-                            else:  # Stariji format za kompatibilnost
-                                date_from = datetime.strptime(date_from, '%Y-%m-%d')
-                        query = query.filter(Application.date_submitted >= date_from)
-                    except ValueError as e:
-                        app.logger.error(f"Greška pri parsiranju početnog datuma: {str(e)}")
-                        flash('Format datuma za početni datum nije validan. Koristite format YYYY-MM-DDThh:mm.', 'danger')
-                    
-                # Filtriranje po datumu i vremenu do
-                if date_to:
-                    try:
-                        if isinstance(date_to, str):
-                            if 'T' in date_to:  # Format iz datetime-local inputa
-                                date_to = datetime.strptime(date_to, '%Y-%m-%dT%H:%M')
-                                # Ne dodajemo krajnje vreme dana jer je vreme već specificirano
-                            else:  # Stariji format za kompatibilnost
-                                date_to = datetime.strptime(date_to, '%Y-%m-%d')
-                                # Postavi kraj dana za završni datum ako je samo datum specificiran
-                                date_to = datetime(date_to.year, date_to.month, date_to.day, 23, 59, 59)
-                        elif not isinstance(date_to, datetime):  # Ako je samo datum bez vremena
-                            # Postavi kraj dana za završni datum
-                            date_to = datetime(date_to.year, date_to.month, date_to.day, 23, 59, 59)
-                        query = query.filter(Application.date_submitted <= date_to)
-                    except ValueError as e:
-                        app.logger.error(f"Greška pri parsiranju krajnjeg datuma: {str(e)}")
-                        flash('Format datuma za krajnji datum nije validan. Koristite format YYYY-MM-DDThh:mm.', 'danger')
-                    
-                # Filtriranje po razredu
-                if grade_filter and grade_filter != '':
-                    # Debug poruka za pomoć u praćenju problema
-                    app.logger.info(f"Filtriranje po razredu: {grade_filter}, tip: {type(grade_filter)}")
-                    query = query.filter(Application.grade == grade_filter)
+            # DataTables će povlačiti podatke putem AJAX poziva na api_applications rutu
+            # Ovde samo vraćamo praznu listu jer se popunjavanje tabele radi kroz AJAX
+            applications = []
             
-            # Sortiranje
-            if sort == 'date_asc':
-                query = query.order_by(asc(Application.date_submitted))
-            elif sort == 'date_desc':
-                query = query.order_by(desc(Application.date_submitted))
-            elif sort == 'name_asc':
-                query = query.order_by(asc(Application.children_surname), asc(Application.children_name))
-            elif sort == 'name_desc':
-                query = query.order_by(desc(Application.children_surname), desc(Application.children_name))
-            elif sort == 'grade_asc':
-                query = query.order_by(asc(Application.grade), asc(Application.class_number))
-            elif sort == 'grade_desc':
-                query = query.order_by(desc(Application.grade), desc(Application.class_number))
-            
-            # Paginacija
-            try:
-                page = request.args.get('page', 1, type=int)
-                per_page = 20  # Broj stavki po stranici
-                applications = query.paginate(page=page, per_page=per_page)
-                
-                school_name = os.getenv('SCHOOL_NAME')
-                return render_template('applications_list.html',
-                                        school_name=school_name,
-                                        applications=applications,
-                                        form=form,
-                                        current_sort=sort)
-            except Exception as e:
-                app.logger.error(f"Greška pri paginaciji ili renderovanju liste prijava: {str(e)}")
-                flash('Došlo je do greške pri pripremi prikaza podataka. Molimo pokušajte ponovo.', 'danger')
-                return redirect(url_for('admin_dashboard'))
-        except SQLAlchemyError as e:
-            app.logger.error(f"SQLAlchemy greška pri pristupu listi prijava: {str(e)}")
-            flash('Došlo je do problema pri pristupu bazi podataka. Molimo pokušajte ponovo kasnije.', 'danger')
+            school_name = os.getenv('SCHOOL_NAME')
+            return render_template('applications_list.html',
+                                    school_name=school_name,
+                                    applications=applications,
+                                    form=form)
+        except Exception as e:
+            app.logger.error(f"Greška pri paginaciji ili renderovanju liste prijava: {str(e)}")
+            flash('Došlo je do greške pri pripremi prikaza podataka. Molimo pokušajte ponovo.', 'danger')
             return redirect(url_for('admin_dashboard'))
+    except SQLAlchemyError as e:
+        app.logger.error(f"SQLAlchemy greška pri pristupu listi prijava: {str(e)}")
+        flash('Došlo je do problema pri pristupu bazi podataka. Molimo pokušajte ponovo kasnije.', 'danger')
+        return redirect(url_for('admin_dashboard'))
     except Exception as e:
         app.logger.error(f"Neočekivana greška u applications_list ruti: {str(e)}")
         flash('Došlo je do neočekivane greške. Molimo pokušajte ponovo kasnije.', 'danger')
@@ -683,24 +590,124 @@ def application_detail(application_id):
         flash('Došlo je do problema pri pristupu bazi podataka. Molimo pokušajte ponovo kasnije.', 'danger')
         return redirect(url_for('applications_list'))
 
-# API ruta za JSON podatke
-@app.route('/api/applications')
+# API ruta za JSON podatke - DataTables server-side processing
+@app.route('/api/applications', methods=['GET', 'POST'])
 @login_required
 def api_applications():
     try:
-        applications = Application.query.all()
-        try:
-            return jsonify([app.to_dict() for app in applications])
-        except Exception as e:
-            app.logger.error(f"Greška pri serijalizaciji podataka u JSON: {str(e)}")
-            return jsonify({
-                'greška': 'Došlo je do greške pri pripremi JSON odgovora',
-                'status': 'error'
-            }), 500
-    except SQLAlchemyError as e:
-        app.logger.error(f"Greška pri pristupu bazi podataka za API: {str(e)}")
+        # Inicijalizuj query
+        query = Application.query
+        
+        # Ukupan broj svih prijava pre filtriranja
+        total_records = query.count()
+        
+        # Parametri koje šalje DataTables
+        draw = request.form.get('draw', type=int)
+        start = request.form.get('start', type=int, default=0)
+        length = request.form.get('length', type=int, default=20)
+        search_value = request.form.get('search[value]', '')
+        
+        # Filter parametri iz naše forme
+        date_from = request.form.get('date_from', '')
+        date_to = request.form.get('date_to', '')
+        grade_filter = request.form.get('grade_filter', '')
+        
+        # Primeni filter za pretragu
+        if search_value:
+            search_filter = or_(
+                Application.children_name.ilike(f'%{search_value}%'),
+                Application.children_surname.ilike(f'%{search_value}%'),
+                Application.mother_name.ilike(f'%{search_value}%'),
+                Application.mother_surname.ilike(f'%{search_value}%'),
+                Application.father_name.ilike(f'%{search_value}%'),
+                Application.father_surname.ilike(f'%{search_value}%')
+            )
+            query = query.filter(search_filter)
+        
+        # Filtriranje po datumu i vremenu od
+        if date_from:
+            try:
+                if 'T' in date_from:  # Format iz datetime-local inputa
+                    date_from = datetime.strptime(date_from, '%Y-%m-%dT%H:%M')
+                else:  # Stariji format za kompatibilnost
+                    date_from = datetime.strptime(date_from, '%Y-%m-%d')
+                query = query.filter(Application.date_submitted >= date_from)
+            except ValueError as e:
+                app.logger.error(f"Greška pri parsiranju početnog datuma: {str(e)}")
+        
+        # Filtriranje po datumu i vremenu do
+        if date_to:
+            try:
+                if 'T' in date_to:  # Format iz datetime-local inputa
+                    date_to = datetime.strptime(date_to, '%Y-%m-%dT%H:%M')
+                else:  # Stariji format za kompatibilnost
+                    date_to = datetime.strptime(date_to, '%Y-%m-%d')
+                    # Postavi kraj dana za završni datum ako je samo datum specificiran
+                    date_to = datetime(date_to.year, date_to.month, date_to.day, 23, 59, 59)
+                query = query.filter(Application.date_submitted <= date_to)
+            except ValueError as e:
+                app.logger.error(f"Greška pri parsiranju krajnjeg datuma: {str(e)}")
+        
+        # Filtriranje po razredu
+        if grade_filter and grade_filter != '':
+            query = query.filter(Application.grade == grade_filter)
+            
+        # Ukupan broj filtriranih prijava
+        filtered_records_count = query.count()
+        
+        # Sortiranje
+        column_index = request.form.get('order[0][column]', type=int, default=5)  # Default je kolona datuma
+        column_name = request.form.get(f'columns[{column_index}][data]', 'date_submitted')
+        direction = request.form.get('order[0][dir]', 'desc')
+        
+        # Mapiranje imena kolona iz DataTables u atribute modela
+        column_mapping = {
+            'id': Application.id,
+            'children_full_name': Application.children_surname,  # Sortiramo po prezimenu
+            'grade_class': Application.grade,
+            'date_submitted': Application.date_submitted
+            # ostale kolone nisu sortabilne ili su kompleksne
+        }
+        
+        # Primeni sortiranje ako je moguće
+        if column_name in column_mapping:
+            column = column_mapping[column_name]
+            if direction == 'asc':
+                query = query.order_by(asc(column))
+            else:
+                query = query.order_by(desc(column))
+        else:
+            # Default sortiranje ako kolona nije prepoznata
+            query = query.order_by(desc(Application.date_submitted))
+        
+        # Paginacija
+        applications = query.offset(start).limit(length).all()
+        
+        # Pripremi podatke za DataTables
+        data = []
+        for application in applications:
+            # Formatiranje podataka za prikaz u tabeli
+            app_dict = {
+                'id': application.id,
+                'children_full_name': f"{application.children_name} {application.children_surname}",
+                'grade_class': f"{application.grade} / {application.class_number}",
+                'parents_info': f"M: {application.mother_name} {application.mother_surname}<br>O: {application.father_name} {application.father_surname}",
+                'documents_info': f'<span class="badge bg-success">Da ({application.document_count})</span>' if application.has_documents else '<span class="badge bg-secondary">Ne</span>',
+                'date_submitted': application.date_submitted.strftime('%d.%m.%Y. %H:%M'),
+                'actions': f'<a href="{url_for("application_detail", application_id=application.id)}" class="btn btn-sm btn-outline-primary">Detalji</a>'
+            }
+            data.append(app_dict)
+        
         return jsonify({
-            'greška': 'Došlo je do problema pri pristupanju bazi podataka',
+            'draw': draw,
+            'recordsTotal': total_records,
+            'recordsFiltered': filtered_records_count,
+            'data': data
+        })
+    except Exception as e:
+        app.logger.error(f"Greška pri obradi DataTables zahteva: {str(e)}")
+        return jsonify({
+            'error': f'Došlo je do problema pri obradi zahteva: {str(e)}',
             'status': 'error'
         }), 500
             
@@ -919,4 +926,187 @@ def export_applications():
     except Exception as e:
         app.logger.error(f"Neočekivana greška pri eksportovanju prijava: {str(e)}")
         flash('Došlo je do neočekivane greške pri eksportovanju podataka. Molimo pokušajte ponovo kasnije.', 'danger')
+        return redirect(url_for('applications_list'))
+
+# Ruta za generisanje PDF dokumenta sa prijavama
+@app.route('/admin/applications_to_pdf')
+@login_required
+def applications_to_pdf():
+    try:
+        # Inicijalizacija query za prijave
+        query = Application.query
+        
+        # Dobijanje filter parametara iz URL-a
+        date_from = request.args.get('date_from', '')
+        date_to = request.args.get('date_to', '')
+        grade_filter = request.args.get('grade_filter', '')
+        search = request.args.get('search', '')
+
+        # Primena filtera ako postoje
+        # Filtriranje po pojmu za pretragu
+        if search:
+            search_filter = or_(
+                Application.children_name.ilike(f'%{search}%'),
+                Application.children_surname.ilike(f'%{search}%'),
+                Application.mother_name.ilike(f'%{search}%'),
+                Application.mother_surname.ilike(f'%{search}%'),
+                Application.father_name.ilike(f'%{search}%'),
+                Application.father_surname.ilike(f'%{search}%')
+            )
+            query = query.filter(search_filter)
+        
+        # Filtriranje po datumu i vremenu od
+        if date_from:
+            try:
+                if 'T' in date_from:  # Format iz datetime-local inputa
+                    date_from = datetime.strptime(date_from, '%Y-%m-%dT%H:%M')
+                else:  # Stariji format za kompatibilnost
+                    date_from = datetime.strptime(date_from, '%Y-%m-%d')
+                query = query.filter(Application.date_submitted >= date_from)
+            except ValueError as e:
+                app.logger.error(f"Greška pri parsiranju početnog datuma: {str(e)}")
+        
+        # Filtriranje po datumu i vremenu do
+        if date_to:
+            try:
+                if 'T' in date_to:  # Format iz datetime-local inputa
+                    date_to = datetime.strptime(date_to, '%Y-%m-%dT%H:%M')
+                else:  # Stariji format za kompatibilnost
+                    date_to = datetime.strptime(date_to, '%Y-%m-%d')
+                    # Postavi kraj dana za završni datum ako je samo datum specificiran
+                    date_to = datetime(date_to.year, date_to.month, date_to.day, 23, 59, 59)
+                query = query.filter(Application.date_submitted <= date_to)
+            except ValueError as e:
+                app.logger.error(f"Greška pri parsiranju krajnjeg datuma: {str(e)}")
+        
+        # Filtriranje po razredu
+        if grade_filter and grade_filter != '':
+            query = query.filter(Application.grade == grade_filter)
+
+        # Za PDF uvek sortiramo od najstarijeg ka najnovijem, suprotno od tabele
+        applications = query.order_by(asc(Application.date_submitted)).all()
+        
+        # Generisanje PDF-a
+        school_name = os.getenv('SCHOOL_NAME')
+        
+        # Korišćenje custom klase za PDF
+        class PDF(FPDF):
+            def __init__(self):
+                super().__init__()
+                # Putanje do fontova
+                font_path = os.path.join(current_app.root_path, 'static', 'fonts')
+                self.add_font('DejaVu', '', os.path.join(font_path, 'DejaVuSansCondensed.ttf'), uni=True)
+                self.add_font('DejaVu', 'B', os.path.join(font_path, 'DejaVuSansCondensed-Bold.ttf'), uni=True)
+                
+                # Definisanje širine kolona prema zadatim parametrima
+                self.col_width_1 = 50  # Ime i prezime deteta
+                self.col_width_2 = 20   # Razred
+                self.col_width_3 = 90   # Roditelji
+                self.col_width_4 = 30   # Datum prijave
+            
+            def header(self):
+                # Zaglavlje dokumenta
+                if school_name:
+                    self.set_font('DejaVu', 'B', 14)
+                    self.cell(0, 10, school_name, 0, 0, align='C')
+                    self.ln(10)
+                
+                self.set_font('DejaVu', 'B', 12)
+                self.cell(0, 10, 'Spisak prijava za upis', 0, 0, align='C')
+                self.ln(10)
+                
+                # Dodajemo informacije o primenjenim filterima
+                filter_text = 'Primenjeni filteri: '
+                filter_applied = False
+                
+                if search:
+                    filter_text += f'Pretraga: {search}, '
+                    filter_applied = True
+                
+                if date_from:
+                    date_from_str = date_from.strftime("%d.%m.%Y. %H:%M") if isinstance(date_from, datetime) else date_from
+                    filter_text += f'Od: {date_from_str}, '
+                    filter_applied = True
+                
+                if date_to:
+                    date_to_str = date_to.strftime("%d.%m.%Y. %H:%M") if isinstance(date_to, datetime) else date_to
+                    filter_text += f'Do: {date_to_str}, '
+                    filter_applied = True
+                
+                if grade_filter and grade_filter != '':
+                    filter_text += f'Razred: {grade_filter}, '
+                    filter_applied = True
+                
+                if filter_applied:
+                    filter_text = filter_text[:-2]  # Uklanjamo poslednji zarez i razmak
+                    self.set_font('DejaVu', '', 10)
+                    self.cell(0, 7, filter_text, 0, 0, align='L')
+                    self.ln(10)
+                
+                # Datum i vreme generisanja
+                self.set_font('DejaVu', '', 8)
+                self.cell(0, 5, f'Generisano: {datetime.now().strftime("%d.%m.%Y. %H:%M")}', 0, 0, align='R')
+                self.ln(10)
+                
+                # Linija ispod zaglavlja
+                self.line(10, self.get_y(), self.w - 10, self.get_y())
+                self.ln(5)  # Razmak nakon linije
+                
+                # Zaglavlja tabele
+                self.set_fill_color(200, 200, 200)
+                self.set_font('DejaVu', 'B', 11)
+                
+                # Zaglavlja kolona prema zadatim parametrima
+                self.cell(self.col_width_1, 10, 'Ime i prezime deteta', 1, 0, 'C', True)
+                self.cell(self.col_width_2, 10, 'Razred', 1, 0, 'C', True)
+                self.cell(self.col_width_3, 10, 'Roditelji', 1, 0, 'C', True)
+                self.cell(self.col_width_4, 10, 'Datum prijave', 1, 1, 'C', True)
+            
+            def footer(self):
+                # Pozicioniranje na 1.5 cm od dna
+                self.set_y(-15)
+                self.set_font('DejaVu', '', 8)  
+                # Broj stranice
+                self.cell(0, 10, f'Strana {self.page_no()}/{{nb}}', 0, 0, 'C')
+        
+        # Kreiranje PDF-a
+        pdf = PDF()
+        pdf.alias_nb_pages()
+        pdf.add_page()
+        pdf.set_auto_page_break(auto=True, margin=15)
+        
+        # Sadržaj tabele
+        pdf.set_font('DejaVu', '', 8)
+        
+        # Popunjavanje tabele podacima
+        for app in applications:
+            parent_info = f"M: {app.mother_name} {app.mother_surname}, O: {app.father_name} {app.father_surname}"
+            # Provera da li je potrebna nova stranica zbog visine reda
+            if pdf.get_y() > pdf.h - 20:
+                pdf.add_page()
+            
+            # Popunjavanje ćelija prema novim širinama kolona iz header metode
+            pdf.cell(pdf.col_width_1, 8, f"{app.children_name} {app.children_surname}", 1, 0, 'L')
+            pdf.cell(pdf.col_width_2, 8, f"{app.grade}/{app.class_number}", 1, 0, 'C')
+            pdf.cell(pdf.col_width_3, 8, parent_info, 1, 0, 'L')
+            pdf.cell(pdf.col_width_4, 8, app.date_submitted.strftime('%d.%m.%Y. %H:%M'), 1, 1, 'C')
+        
+        # Generišemo PDF kao odgovor
+        # Osiguramo da je izlaz u bytes formatu koji Flask očekuje
+        pdf_data = pdf.output(dest='S')
+        if not isinstance(pdf_data, bytes):
+            pdf_data = bytes(pdf_data)
+        
+        response = make_response(pdf_data)
+        response.headers.set('Content-Disposition', 'inline', 
+                           filename=f'prijave-{datetime.now().strftime("%Y%m%d%H%M%S")}.pdf')
+        response.headers.set('Content-Type', 'application/pdf')
+        return response
+    except SQLAlchemyError as e:
+        current_app.logger.error(f"SQLAlchemy greška pri generisanju PDF-a sa prijavama: {str(e)}")
+        flash('Došlo je do problema pri pristupu bazi podataka. Molimo pokušajte ponovo kasnije.', 'danger')
+        return redirect(url_for('applications_list'))
+    except Exception as e:
+        current_app.logger.error(f"Neočekivana greška pri generisanju PDF-a sa prijavama: {str(e)}")
+        flash('Došlo je do neočekivane greške pri generisanju PDF dokumenta. Molimo pokušajte ponovo.', 'danger')
         return redirect(url_for('applications_list'))
