@@ -78,19 +78,29 @@ def configure_logging(app):
     file_handler.setFormatter(formatter)
     file_handler.setLevel(logging.INFO)
     
-    # Konfiguracija console handlera
-    console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setFormatter(formatter)
-    console_handler.setLevel(logging.DEBUG)
-    
-    # Dodaj handlere u app.logger
+    # Dodaj file handler u app.logger
     app.logger.addHandler(file_handler)
-    app.logger.addHandler(console_handler)
+    
+    # Proveri da li smo u produkcijskom okruženju
+    is_production = os.getenv('FLASK_ENV') == 'production' or os.getenv('ENVIRONMENT') == 'production'
+    
+    # Dodaj console handler samo u razvoju
+    if not is_production:
+        # Konfiguracija console handlera
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setFormatter(formatter)
+        console_handler.setLevel(logging.DEBUG)
+        app.logger.addHandler(console_handler)
     
     # Postavi nivo logovanja
     app.logger.setLevel(logging.INFO)
     
-    app.logger.info('Prijava aplikacija pokrenuta')
+    # Koristi try-except za logovanje kako bi se izbegle BrokenPipe greške
+    try:
+        app.logger.info('Prijava aplikacija pokrenuta')
+    except BrokenPipeError:
+        # Ignorišemo BrokenPipe grešku pri logovanju
+        pass
 
 
 def create_app():
