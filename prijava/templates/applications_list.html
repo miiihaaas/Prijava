@@ -16,7 +16,7 @@
                     <h5 class="mb-0 text-white">Filteri i pretraga</h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ url_for('applications_list') }}" class="row g-3">
+                    <form method="POST" action="{{ url_for('applications_list', sort=current_sort) }}" class="row g-3">
                         {{ form.hidden_tag() }}
                         <div class="col-md-4">
                             {{ form.search_term.label(class="form-label") }}
@@ -24,11 +24,11 @@
                         </div>
                         <div class="col-md-2">
                             {{ form.date_from.label(class="form-label") }}
-                            {{ form.date_from(class="form-control", type="date") }}
+                            {{ form.date_from(class="form-control", type="datetime-local", placeholder="Datum i vreme od") }}
                         </div>
                         <div class="col-md-2">
                             {{ form.date_to.label(class="form-label") }}
-                            {{ form.date_to(class="form-control", type="date") }}
+                            {{ form.date_to(class="form-control", type="datetime-local", placeholder="Datum i vreme do") }}
                         </div>
                         <div class="col-md-2">
                             {{ form.grade_filter.label(class="form-label") }}
@@ -50,18 +50,23 @@
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0 text-white">Lista prijava</h5>
-                        <div class="dropdown">
-                            <button class="btn btn-sm btn-primary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-sort"></i> Sortiraj po
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="sortDropdown">
-                                <li><a class="dropdown-item {% if current_sort == 'date_desc' %}active{% endif %}" href="{{ url_for('applications_list', sort='date_desc') }}">Najnovije prvo</a></li>
-                                <li><a class="dropdown-item {% if current_sort == 'date_asc' %}active{% endif %}" href="{{ url_for('applications_list', sort='date_asc') }}">Najstarije prvo</a></li>
-                                <li><a class="dropdown-item {% if current_sort == 'name_asc' %}active{% endif %}" href="{{ url_for('applications_list', sort='name_asc') }}">Prezime (A-Z)</a></li>
-                                <li><a class="dropdown-item {% if current_sort == 'name_desc' %}active{% endif %}" href="{{ url_for('applications_list', sort='name_desc') }}">Prezime (Z-A)</a></li>
-                                <li><a class="dropdown-item {% if current_sort == 'grade_asc' %}active{% endif %}" href="{{ url_for('applications_list', sort='grade_asc') }}">Razred (rastući)</a></li>
-                                <li><a class="dropdown-item {% if current_sort == 'grade_desc' %}active{% endif %}" href="{{ url_for('applications_list', sort='grade_desc') }}">Razred (opadajući)</a></li>
-                            </ul>
+                        <div class="d-flex">
+                            <a href="{{ url_for('export_applications', search_term=request.form.get('search_term') or request.args.get('search_term'), date_from=request.form.get('date_from') or request.args.get('date_from'), date_to=request.form.get('date_to') or request.args.get('date_to'), grade_filter=request.form.get('grade_filter') or request.args.get('grade_filter'), sort=current_sort) }}" class="btn btn-sm btn-success me-2">
+                                <i class="fas fa-file-export"></i> Eksportuj
+                            </a>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-primary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-sort"></i> Sortiraj po
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="sortDropdown">
+                                    <li><a class="dropdown-item {% if current_sort == 'date_desc' %}active{% endif %}" href="{{ url_for('applications_list', sort='date_desc') }}">Najnovije prvo</a></li>
+                                    <li><a class="dropdown-item {% if current_sort == 'date_asc' %}active{% endif %}" href="{{ url_for('applications_list', sort='date_asc') }}">Najstarije prvo</a></li>
+                                    <li><a class="dropdown-item {% if current_sort == 'name_asc' %}active{% endif %}" href="{{ url_for('applications_list', sort='name_asc') }}">Prezime (A-Z)</a></li>
+                                    <li><a class="dropdown-item {% if current_sort == 'name_desc' %}active{% endif %}" href="{{ url_for('applications_list', sort='name_desc') }}">Prezime (Z-A)</a></li>
+                                    <li><a class="dropdown-item {% if current_sort == 'grade_asc' %}active{% endif %}" href="{{ url_for('applications_list', sort='grade_asc') }}">Razred (rastući)</a></li>
+                                    <li><a class="dropdown-item {% if current_sort == 'grade_desc' %}active{% endif %}" href="{{ url_for('applications_list', sort='grade_desc') }}">Razred (opadajući)</a></li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>

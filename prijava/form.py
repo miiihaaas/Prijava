@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, SelectField, FileField, BooleanField, MultipleFileField, PasswordField, DateField, HiddenField
+from wtforms import StringField, SubmitField, SelectField, FileField, BooleanField, MultipleFileField, PasswordField, DateField, DateTimeField, HiddenField
 from wtforms.validators import DataRequired, Regexp, Email, Length, EqualTo, ValidationError #, FileRequired
 from flask_wtf.file import FileAllowed
 
@@ -43,8 +43,8 @@ class ApplicationForm(FlaskForm):
 
 class SearchForm(FlaskForm):
     search_term = StringField('Pretraga', validators=[])
-    date_from = DateField('Od datuma', validators=[], format='%Y-%m-%d')
-    date_to = DateField('Do datuma', validators=[], format='%Y-%m-%d')
+    date_from = DateTimeField('Od datuma i vremena', validators=[], format='%Y-%m-%dT%H:%M')
+    date_to = DateTimeField('Do datuma i vremena', validators=[], format='%Y-%m-%dT%H:%M')
     grade_filter = SelectField('Razred', 
                            choices=[('', 'Svi'), ('1', '1'), ('2', '2'), ('3', '3'), ('4', '4')],
                            validators=[])
