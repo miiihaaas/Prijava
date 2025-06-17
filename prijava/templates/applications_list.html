@@ -26,7 +26,7 @@
                             {{ form.date_from.label(class="form-label") }}
                             <div class="input-group">
                                 {{ form.date_from(class="form-control datepicker", type="datetime-local", placeholder="Datum i vreme od", id="date_from") }}
-                                <button type="button" class="btn btn-outline-secondary clear-date" data-target="date_from">
+                                <button type="button" class="btn btn-danger clear-date" data-target="date_from" title="Očisti datum">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>
@@ -35,7 +35,7 @@
                             {{ form.date_to.label(class="form-label") }}
                             <div class="input-group">
                                 {{ form.date_to(class="form-control datepicker", type="datetime-local", placeholder="Datum i vreme do", id="date_to") }}
-                                <button type="button" class="btn btn-outline-secondary clear-date" data-target="date_to">
+                                <button type="button" class="btn btn-danger clear-date" data-target="date_to" title="Očisti datum">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>
