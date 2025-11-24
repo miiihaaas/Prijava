@@ -1,4 +1,5 @@
 from celery import Celery
+import os
 
 # Kreiramo instancu celery direktno na nivou modula
 # Tako da se može importovati kao prijava.celery_app.celery
@@ -8,7 +9,7 @@ def make_celery(app=None):
     Kreira Celery instancu koja može da koristi Flask konfiguraciju
     """
     # Koristimo Redis sa ispravnim podacima sa vašeg servera
-    redis_url = 'redis://:7GHdXQBCHo@localhost:6025/0'
+    redis_url = os.environ.get('REDIS_URL', 'redis://:KCxrpjWsrY@127.0.0.1:6025/1')
     
     celery = Celery(
         'prijava',
