@@ -33,6 +33,16 @@ class User(db.Model, UserMixin):
                 self.reset_token_expiry > datetime.utcnow())
 
 class Application(db.Model):
+    __table_args__ = (
+        db.UniqueConstraint(
+            'children_name', 'children_surname',
+            'mother_name', 'mother_surname',
+            'father_name', 'father_surname',
+            'grade', 'class_number',
+            name='uq_application_identity',
+        ),
+    )
+
     id = db.Column(db.Integer, primary_key=True)
     children_name = db.Column(db.String(100), nullable=False)
     children_surname = db.Column(db.String(100), nullable=False)

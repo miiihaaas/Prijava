@@ -1,6 +1,7 @@
-from prijava import db, app
+from prijava import create_app, db
 
-# Kreiraj sve tabele definisane u modelima
+app = create_app()
+
 with app.app_context():
     db.create_all()
     print("Baza podataka je uspešno inicijalizovana.")

@@ -13,6 +13,4 @@ login_manager.login_message = 'Molimo prijavite se da biste pristupili ovoj stra
 login_manager.login_message_category = 'info'
 
 
-from prijava.app import create_app  # noqa: E402  (re-export for run.py / init_db.py / create_admin.py)
-
-app = create_app()
+from prijava.app import create_app  # noqa: E402  (re-export za run.py / init_db.py / create_admin.py)

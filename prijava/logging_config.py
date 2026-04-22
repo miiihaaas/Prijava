@@ -10,6 +10,12 @@ def configure_logging(app):
     if not os.path.exists(logs_dir):
         os.makedirs(logs_dir)
 
+    # Uklanjamo postojeće handlere da ne bismo dobili duplirane linije kada
+    # se configure_logging pozove više puta (npr. više instanci create_app).
+    for handler in list(app.logger.handlers):
+        app.logger.removeHandler(handler)
+    app.logger.propagate = False
+
     formatter = logging.Formatter(
         '[%(asctime)s] %(levelname)s u %(module)s: %(message)s'
     )

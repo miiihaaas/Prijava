@@ -3,11 +3,15 @@ import os
 import pathlib
 from datetime import datetime
 
+import pytz
 from flask import current_app, session
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from prijava import db
 from prijava.models import Application
+
+
+SERBIA_TZ = pytz.timezone('Europe/Belgrade')
 
 
 def ensure_attachments_dir():
@@ -17,23 +21,34 @@ def ensure_attachments_dir():
     return attachments_dir
 
 
+def _identity_filter(form_data):
+    """Filter izraz koji definiše 'istu prijavu' za detekciju duplikata."""
+    return (
+        Application.children_name == form_data['children_name'].capitalize(),
+        Application.children_surname == form_data['children_surname'].capitalize(),
+        Application.mother_name == form_data['mother_name'].capitalize(),
+        Application.mother_surname == form_data['mother_surname'].capitalize(),
+        Application.father_name == form_data['father_name'].capitalize(),
+        Application.father_surname == form_data['father_surname'].capitalize(),
+        Application.grade == form_data['grade'],
+        Application.class_number == form_data['class_number'],
+    )
+
+
 def save_application(form_data):
     """Persist a new :class:`Application`, detecting duplicates.
 
     Returns ``(application, is_duplicate)``.
+
+    Zaštita od race condition-a: prvo pokušavamo brzu SELECT proveru, ali
+    u slučaju da paralelni zahtev stigne između SELECT-a i INSERT-a, DB
+    unique constraint (``uq_application_identity``) će odbiti INSERT sa
+    ``IntegrityError``. Tu grešku hvatamo, ponovo čitamo postojeću prijavu
+    i vraćamo je kao duplikat — ista semantika kao kad bi prvi SELECT
+    našao postojeću.
     """
     try:
-        existing = Application.query.filter(
-            Application.children_name == form_data['children_name'].capitalize(),
-            Application.children_surname == form_data['children_surname'].capitalize(),
-            Application.mother_name == form_data['mother_name'].capitalize(),
-            Application.mother_surname == form_data['mother_surname'].capitalize(),
-            Application.father_name == form_data['father_name'].capitalize(),
-            Application.father_surname == form_data['father_surname'].capitalize(),
-            Application.grade == form_data['grade'],
-            Application.class_number == form_data['class_number'],
-        ).first()
-
+        existing = Application.query.filter(*_identity_filter(form_data)).first()
         if existing:
             session['duplicate_application'] = True
             return existing, True
@@ -45,9 +60,6 @@ def save_application(form_data):
                 if document and document.filename.strip():
                     document_count += 1
                     has_documents = True
-
-        import pytz
-        serbia_tz = pytz.timezone('Europe/Belgrade')
 
         application = Application(
             children_name=form_data['children_name'].capitalize(),
@@ -62,11 +74,22 @@ def save_application(form_data):
             document_count=document_count,
             attachment_paths='{}',
             consent=form_data['consent'],
-            date_submitted=datetime.now(serbia_tz),
+            date_submitted=datetime.now(SERBIA_TZ),
         )
 
         db.session.add(application)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            existing = Application.query.filter(*_identity_filter(form_data)).first()
+            if existing:
+                current_app.logger.info(
+                    f"Race condition: paralelni INSERT je već kreirao prijavu id={existing.id}"
+                )
+                session['duplicate_application'] = True
+                return existing, True
+            raise
 
         session['duplicate_application'] = False
         return application, False
