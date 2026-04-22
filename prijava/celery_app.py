@@ -1,36 +1,31 @@
-from celery import Celery
 import os
 
-# Kreiramo instancu celery direktno na nivou modula
-# Tako da se može importovati kao prijava.celery_app.celery
+from celery import Celery
 
-def make_celery(app=None):
-    """
-    Kreira Celery instancu koja može da koristi Flask konfiguraciju
-    """
-    # Koristimo Redis sa ispravnim podacima sa vašeg servera
+
+def make_celery():
+    """Create a bare Celery instance wired to the Redis broker/backend."""
     redis_url = os.environ.get('REDIS_URL', 'redis://:KCxrpjWsrY@127.0.0.1:6025/1')
-    
-    celery = Celery(
+    return Celery(
         'prijava',
         broker=redis_url,
         backend=redis_url,
-        include=['prijava.tasks']
+        include=['prijava.tasks'],
     )
-    
-    # Učitaj konfiguraciju iz Flask aplikacije ako je prosleđena
-    if app:
-        celery.conf.update(app.config)
-        
-        # Kreiramo klasu TaskBase koja će imati pristup Flask kontekstu
-        class ContextTask(celery.Task):
-            def __call__(self, *args, **kwargs):
-                with app.app_context():
-                    return self.run(*args, **kwargs)
-                    
-        celery.Task = ContextTask
-        
-    return celery
 
-# Kreiramo celery instancu koja će biti dostupna kao prijava.celery_app.celery
+
+# Module-level instance — tasks.py imports this as ``from prijava.celery_app import celery``
 celery = make_celery()
+
+
+def init_celery(app):
+    """Hook Celery up to the Flask ``app`` (config + request-scoped task context)."""
+    celery.conf.update(app.config)
+
+    class ContextTask(celery.Task):
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return self.run(*args, **kwargs)
+
+    celery.Task = ContextTask
+    return celery

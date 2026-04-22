@@ -34,7 +34,7 @@
                 {% endif %}
             </div>
             <div class="mb-3 text-end">
-                <a href="{{ url_for('reset_request') }}" class="text-primary">Zaboravili ste lozinku?</a>
+                <a href="{{ url_for('auth.reset_request') }}" class="text-primary">Zaboravili ste lozinku?</a>
             </div>
             <div class="d-grid gap-2">
                 {{ form.submit(class="btn btn-primary") }}

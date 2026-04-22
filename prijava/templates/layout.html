@@ -42,17 +42,17 @@
                         <ul class="navbar-nav ms-auto">
                             {% if current_user.is_authenticated %}
                                 <li class="nav-item">
-                                    <a class="nav-item nav-link {{ 'active' if request.endpoint in ['applications_list'] }}" href="{{ url_for('applications_list') }}">Prijave</a>
+                                    <a class="nav-item nav-link {{ 'active' if request.endpoint in ['admin.applications_list'] }}" href="{{ url_for('admin.applications_list') }}">Prijave</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-item nav-link {{ 'active' if request.endpoint in ['application'] }}" href="{{ url_for('application') }}">Forma</a>
+                                    <a class="nav-item nav-link {{ 'active' if request.endpoint in ['public.application'] }}" href="{{ url_for('public.application') }}">Forma</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-item nav-link {{ 'active' if request.endpoint in ['logout'] }}" href="{{ url_for('logout') }}">Odjavi se</a>
+                                    <a class="nav-item nav-link {{ 'active' if request.endpoint in ['auth.logout'] }}" href="{{ url_for('auth.logout') }}">Odjavi se</a>
                                 </li>
                                 {% else %}
                                 <li class="nav-item">
-                                    <a class="nav-item nav-link {{ 'active' if request.endpoint in ['application'] }}" href="{{ url_for('application') }}">Forma</a>
+                                    <a class="nav-item nav-link {{ 'active' if request.endpoint in ['public.application'] }}" href="{{ url_for('public.application') }}">Forma</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link" href="tel:{{ school_phone }}">{{ school_phone }}</a>

@@ -58,7 +58,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0 text-white">Lista prijava</h5>
                         <div class="d-flex">
-                            <a href="{{ url_for('applications_to_pdf') }}" class="btn btn-sm btn-success me-2" target="_blank">
+                            <a href="{{ url_for('admin.applications_to_pdf') }}" class="btn btn-sm btn-success me-2" target="_blank">
                                 <i class="fas fa-file-export"></i> Eksportuj u PDF
                             </a>
                         </div>
@@ -97,7 +97,7 @@
                                     </td>
                                     <td>{{ application.date_submitted.strftime('%d.%m.%Y. %H:%M') }}</td>
                                     <td>
-                                        <a href="{{ url_for('application_detail', application_id=application.id) }}" class="btn btn-sm btn-outline-primary">Detalji</a>
+                                        <a href="{{ url_for('admin.application_detail', application_id=application.id) }}" class="btn btn-sm btn-outline-primary">Detalji</a>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -128,7 +128,7 @@
             processing: true,
             serverSide: true,
             ajax: {
-                url: "{{ url_for('api_applications') }}",
+                url: "{{ url_for('api.applications') }}",
                 type: "POST",
                 data: function(d) {
                     // Dodaj filtere iz forme
@@ -182,7 +182,7 @@
             var search = $('.dataTables_filter input').val(); // Dodaj vrednost pretrage
             
             // Koristi applications_to_pdf rutu umesto export_applications
-            var exportUrl = "{{ url_for('applications_to_pdf') }}" + 
+            var exportUrl = "{{ url_for('admin.applications_to_pdf') }}" +
                 "?date_from=" + (date_from || '') + 
                 "&date_to=" + (date_to || '') + 
                 "&grade_filter=" + (grade_filter || '') +
