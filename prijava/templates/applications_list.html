@@ -4,6 +4,7 @@
 {% block head %}
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.1/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.4.0/css/responsive.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
 {% endblock %}
 
 {% block content %}
@@ -76,6 +77,7 @@
     <section class="table-card">
         <div class="table-card-head">
             <h2 class="table-card-title">Lista prijava</h2>
+            <input type="search" class="dt-custom-search" id="dtCustomSearch" placeholder="Pretraži po imenu..." aria-label="Pretraži po imenu">
         </div>
         <div class="table-card-body">
             <div class="table-responsive">
@@ -104,6 +106,8 @@
 <script type="text/javascript" src="https://cdn.datatables.net/1.13.1/js/dataTables.bootstrap5.min.js"></script>
 <script type="text/javascript" src="https://cdn.datatables.net/responsive/2.4.0/js/dataTables.responsive.min.js"></script>
 <script type="text/javascript" src="https://cdn.datatables.net/responsive/2.4.0/js/responsive.bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/sr.js"></script>
 
 <script>
 $(document).ready(function() {
@@ -132,48 +136,81 @@ $(document).ready(function() {
         ],
         order: [[5, 'desc']],
         language: {
-            url: "https://cdn.datatables.net/plug-ins/1.13.1/i18n/sr-SP.json",
-            search: "",
-            searchPlaceholder: "Pretraži po imenu..."
+            url: "https://cdn.datatables.net/plug-ins/1.13.1/i18n/sr-SP.json"
         },
-        dom: '<"row g-0"<"col-sm-12"f>>rt<"row g-0"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+        dom: 'rt<"dt-foot"ip>',
         lengthChange: false,
         pageLength: 20
     });
 
-    // Auto-apply filters on change
-    $('#date_from, #date_to, #grade_filter').on('change', function() {
+    // Date+time pickers via flatpickr (consistent UX across browsers)
+    var fpConfig = {
+        enableTime: true,
+        time_24hr: true,
+        dateFormat: "Y-m-d\\TH:i",
+        altInput: true,
+        altFormat: "d.m.Y. H:i",
+        locale: flatpickr.l10ns.sr,
+        allowInput: false,
+        onChange: function() { table.draw(); }
+    };
+    flatpickr('#date_from', fpConfig);
+    flatpickr('#date_to', fpConfig);
+
+    // Custom search in table-card-head (live, debounced)
+    var searchTimer;
+    $('#dtCustomSearch').on('input', function() {
+        var val = this.value;
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(function() { table.search(val).draw(); }, 200);
+    });
+
+    // Grade filter (flatpickr handles dates on its own via onChange)
+    $('#filterForm').on('change', '#grade_filter', function(){
         table.draw();
     });
 
-    // Clear individual date
-    $('.clear-date').on('click', function() {
+    // Prevent Enter-key from submitting the filter form
+    $('#filterForm').on('submit', function(e){ e.preventDefault(); });
+
+    // Clear individual date (via flatpickr instance)
+    $('#filterForm').on('click', '.clear-date', function() {
         var targetId = $(this).data('target');
-        $('#' + targetId).val('');
-        table.draw();
+        var el = document.getElementById(targetId);
+        if (el && el._flatpickr) {
+            el._flatpickr.clear(); // onChange fires → table.draw()
+        } else {
+            $('#' + targetId).val('');
+            table.draw();
+        }
     });
 
-    // Clear all filters
+    // Clear all filters (suppress per-clear onChange, draw once at end)
     $('#clearFiltersBtn').on('click', function() {
-        $('#date_from').val('');
-        $('#date_to').val('');
+        ['date_from', 'date_to'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el && el._flatpickr) el._flatpickr.clear(false);
+            else $('#' + id).val('');
+        });
         $('#grade_filter').val('');
-        table.search('');
-        table.draw();
+        $('#dtCustomSearch').val('');
+        table.search('').draw();
     });
 
     // Sync export URL with current filters
-    table.on('draw', function() {
+    function updateExportUrl() {
         var params = new URLSearchParams();
         var df = $('#date_from').val(), dt = $('#date_to').val(),
-            gf = $('#grade_filter').val(), s = $('.dataTables_filter input').val();
+            gf = $('#grade_filter').val(), s = $('#dtCustomSearch').val();
         if (df) params.set('date_from', df);
         if (dt) params.set('date_to', dt);
         if (gf) params.set('grade_filter', gf);
         if (s)  params.set('search', s);
         var base = "{{ url_for('admin.applications_to_pdf') }}";
         $('#exportBtn').attr('href', params.toString() ? base + '?' + params.toString() : base);
-    });
+    }
+    table.on('draw', updateExportUrl);
+    updateExportUrl();
 });
 </script>
 {% endblock %}

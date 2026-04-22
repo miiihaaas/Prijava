@@ -1,3 +1,4 @@
+import threading
 from datetime import datetime
 
 from flask import (
@@ -16,6 +17,26 @@ from prijava.form import ApplicationForm
 from prijava.models import Application
 from prijava.services.applications import persist_attachments, save_application
 from prijava.tasks import send_email_task
+
+
+def _enqueue_email_async(form_data_copy, application_id, logger):
+    """Fire-and-forget Celery enqueue u pozadinskom thread-u.
+
+    Request thread se ne blokira ako je Redis broker spor ili nedostupan —
+    prijava je već zapisana u bazu i fajlovi na disk. Ako enqueue padne,
+    samo se loguje greška.
+    """
+    def _run():
+        try:
+            task_result = send_email_task.delay(form_data_copy)
+            logger.info(
+                f"Email za prijavu {application_id} poslat asinhrono sa task ID: {task_result.id}"
+            )
+        except Exception as exc:
+            logger.error(
+                f"Celery broker nedostupan pri slanju emaila za prijavu {application_id}: {exc}"
+            )
+    threading.Thread(target=_run, daemon=True).start()
 
 
 public_bp = Blueprint('public', __name__)
@@ -72,13 +93,14 @@ def application():
                 form_data_copy = {k: v for k, v in form_data.items() if k != 'documents'}
                 form_data_copy['saved_files'] = saved_files
 
-                task_result = send_email_task.delay(form_data_copy)
-                current_app.logger.info(
-                    f"Email za prijavu {application_row.id} poslat asinhrono sa task ID: {task_result.id}"
+                _enqueue_email_async(
+                    form_data_copy,
+                    application_row.id,
+                    current_app._get_current_object().logger,
                 )
             except Exception as exc:
-                current_app.logger.error(f"Greška pri slanju asinhronog email-a: {exc}")
-                flash('Vaša prijava je sačuvana, ali postoji problem sa slanjem email obaveštenja.', 'warning')
+                current_app.logger.error(f"Greška pri obradi priloga: {exc}")
+                flash('Vaša prijava je sačuvana, ali postoji problem sa obradom priloga.', 'warning')
 
             flash('Prijava je uspešno poslata.', 'success')
             return redirect(url_for('public.submission_details', application_id=application_row.id))
