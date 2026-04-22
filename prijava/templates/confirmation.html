@@ -1,5 +1,17 @@
 {% extends 'layout.html' %}
+{% block title %}Prijava poslata · {{ school_name }}{% endblock %}
 
 {% block content %}
-<h2>Uspešno je poslata forma na mejl školi</h2>
+<section class="error-screen">
+    <div class="error-num" style="color: var(--ok); font-size: clamp(4rem, 10vw, 6rem);">
+        <i class="fas fa-check-circle"></i>
+    </div>
+    <p class="eyebrow eyebrow--success">Prijava primljena</p>
+    <h1 class="error-title">Forma je uspešno poslata</h1>
+    <p class="error-lede">Škola je primila vašu prijavu putem mejla.</p>
+    <a class="btn btn-primary" href="{{ url_for('public.application') }}">
+        <span class="btn-label">Nova prijava</span>
+        <span class="btn-arrow" aria-hidden="true">→</span>
+    </a>
+</section>
 {% endblock %}

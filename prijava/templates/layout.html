@@ -1,111 +1,92 @@
 <!doctype html>
 <html lang="sr">
-    <head>
-        <!-- Required meta tags -->
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>{% block title %}{{ school_name or 'Prijava' }}{% endblock %}</title>
 
-        <!-- Bootstrap CSS -->
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-        
-        <!-- DataTables CSS -->
-        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.1/css/dataTables.bootstrap5.min.css">
-        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.4.0/css/responsive.bootstrap5.min.css">
-        
-        <!-- Google Fonts -->
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100..900&display=swap" rel="stylesheet">
-        <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@100..900&display=swap" rel="stylesheet">
-        
-        <!-- Select2 CSS -->
-        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-        
-        <!-- Font Awesome -->
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <a class="skip-link" href="#main">Preskoči na sadržaj</a>
 
-        <!-- Custom CSS -->
-        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
-
-        <title>{{ title }}</title>
-    </head>
-    <body>
-        <header class="site-header">
-            <!-- Navbar -->
-            <nav class="navbar navbar-expand-lg">
-                <div class="container-fluid">
-                    <a class="navbar-brand" href="{{ school_web_address }}">{{ school_name }}</a>
-                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
-                    <div class="collapse navbar-collapse" id="navbarNav">
-                        <ul class="navbar-nav ms-auto">
-                            {% if current_user.is_authenticated %}
-                                <li class="nav-item">
-                                    <a class="nav-item nav-link {{ 'active' if request.endpoint in ['admin.applications_list'] }}" href="{{ url_for('admin.applications_list') }}">Prijave</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-item nav-link {{ 'active' if request.endpoint in ['public.application'] }}" href="{{ url_for('public.application') }}">Forma</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-item nav-link {{ 'active' if request.endpoint in ['auth.logout'] }}" href="{{ url_for('auth.logout') }}">Odjavi se</a>
-                                </li>
-                                {% else %}
-                                <li class="nav-item">
-                                    <a class="nav-item nav-link {{ 'active' if request.endpoint in ['public.application'] }}" href="{{ url_for('public.application') }}">Forma</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="tel:{{ school_phone }}">{{ school_phone }}</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="mailto:{{ school_email }}">{{ school_email }}</a>
-                                </li>
-                            {% endif %}
-                        </ul>
-                    </div>
-                </div>
-            </nav>
-        </header>
-
-        <main role="main" class="container">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                            {{ message|safe }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                        <script>
-                            setTimeout(function() {
-                                $(".alert").alert('close');
-                            }, 15000);
-                        </script>
-                    {% endfor %}
+    <header class="site-header">
+        <div class="nav-wrap">
+            <a class="brand" href="{{ school_web_address or url_for('public.application') }}">
+                <span class="brand-mark" aria-hidden="true"></span>
+                <span class="brand-text">{{ school_name }}</span>
+            </a>
+            <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="primary-nav" aria-label="Otvori meni">
+                <span class="nav-toggle-bars"><span></span><span></span></span>
+            </button>
+            <nav class="primary-nav" id="primary-nav">
+                {% if current_user.is_authenticated %}
+                    <a class="nav-link {% if request.endpoint == 'admin.applications_list' %}is-active{% endif %}" href="{{ url_for('admin.applications_list') }}">Prijave</a>
+                    <a class="nav-link {% if request.endpoint == 'public.application' %}is-active{% endif %}" href="{{ url_for('public.application') }}">Forma</a>
+                    <a class="nav-link nav-link--subtle" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt" aria-hidden="true"></i><span>Odjavi se</span></a>
+                {% else %}
+                    <a class="nav-link {% if request.endpoint == 'public.application' %}is-active{% endif %}" href="{{ url_for('public.application') }}">Forma</a>
+                    {% if school_phone %}<a class="nav-link nav-link--subtle" href="tel:{{ school_phone }}"><i class="fas fa-phone" aria-hidden="true"></i><span>{{ school_phone }}</span></a>{% endif %}
+                    {% if school_email %}<a class="nav-link nav-link--subtle" href="mailto:{{ school_email }}"><i class="fas fa-envelope" aria-hidden="true"></i><span>{{ school_email }}</span></a>{% endif %}
                 {% endif %}
-            {% endwith %}
-            {% block content %}{% endblock %}
-        </main>
+            </nav>
+        </div>
+    </header>
 
+    <main class="site-main" id="main">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-stack">
+                    {% for category, message in messages %}
+                        <div class="flash flash--{{ category }}" role="alert">
+                            <span class="flash-icon" aria-hidden="true">
+                                {% if category == 'success' %}<i class="fas fa-check"></i>
+                                {% elif category == 'warning' %}<i class="fas fa-exclamation-triangle"></i>
+                                {% elif category == 'danger' %}<i class="fas fa-times"></i>
+                                {% else %}<i class="fas fa-info"></i>{% endif %}
+                            </span>
+                            <span class="flash-body">{{ message|safe }}</span>
+                            <button type="button" class="flash-close" aria-label="Zatvori poruku">&times;</button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
 
-        <!-- Optional JavaScript -->
-        <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
-        
-        <!-- Select2 JS -->
-        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-        
-        <!-- DataTables JS -->
-        <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js"></script>
-        <script src="https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap5.js"></script>
-        
-        <!-- Slick Carousel JS -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick.min.js"></script>
-        
-        <!-- Custom JS -->
-        <script src="{{ url_for('static', filename='js/slider.js') }}"></script>
+        {% block content %}{% endblock %}
+    </main>
 
-        {% block scripts %}{% endblock %}
-    </body>
+    <footer class="site-footer">
+        <div class="foot-rule"></div>
+        <div class="foot-inner">
+            <span class="foot-brand">{{ school_name }}</span>
+            {% if school_phone %}<span class="foot-meta"><i class="fas fa-phone" aria-hidden="true"></i><a href="tel:{{ school_phone }}">{{ school_phone }}</a></span>{% endif %}
+            {% if school_email %}<span class="foot-meta"><i class="fas fa-envelope" aria-hidden="true"></i><a href="mailto:{{ school_email }}">{{ school_email }}</a></span>{% endif %}
+        </div>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    (function(){
+      var t = document.querySelector('.nav-toggle'), n = document.getElementById('primary-nav');
+      if (t && n) t.addEventListener('click', function(){
+        var o = n.classList.toggle('is-open');
+        t.setAttribute('aria-expanded', o ? 'true' : 'false');
+      });
+      document.querySelectorAll('.flash').forEach(function(f){
+        var c = f.querySelector('.flash-close');
+        if (c) c.addEventListener('click', function(){ f.classList.add('is-dismissing'); setTimeout(function(){ f.remove(); }, 350); });
+        setTimeout(function(){ f.classList.add('is-dismissing'); setTimeout(function(){ f.remove(); }, 400); }, 15000);
+      });
+    })();
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
 </html>

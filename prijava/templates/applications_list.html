@@ -1,195 +1,179 @@
 {% extends "layout.html" %}
+{% block title %}Prijave · Administracija · {{ school_name }}{% endblock %}
 
 {% block head %}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.1/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.4.0/css/responsive.bootstrap5.min.css">
 {% endblock %}
 
 {% block content %}
-<div class="content-section">
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <h1>Pregled prijava</h1>
-            <p class="text-muted">Pregled svih pristiglih prijava dnevnog boravka</p>
+<div class="admin-page">
+    <header class="admin-head">
+        <p class="eyebrow">Administracija · Pregled</p>
+        <h1>Prijave</h1>
+        <p class="admin-lede">Pregled pristiglih prijava za produženi boravak. Koristite filtere za sužavanje liste ili preuzmite PDF spisak.</p>
+    </header>
+
+    <section class="stat-grid" aria-label="Statistika">
+        <div class="stat-card stat-card--accent">
+            <span class="stat-label">Ukupno prijava</span>
+            <span class="stat-value">{{ stats.total }}</span>
         </div>
-    </div>
-    
-    <!-- Forma za filtriranje -->
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0 text-white">Filteri</h5>
-                </div>
-                <div class="card-body">
-                    <form id="filterForm" class="row g-3">
-                        {{ form.hidden_tag() }}
-                        <div class="col-md-4">
-                            {{ form.date_from.label(class="form-label") }}
-                            <div class="input-group">
-                                {{ form.date_from(class="form-control datepicker", type="datetime-local", placeholder="Datum i vreme od", id="date_from") }}
-                                <button type="button" class="btn btn-danger clear-date" data-target="date_from" title="Očisti datum">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            {{ form.date_to.label(class="form-label") }}
-                            <div class="input-group">
-                                {{ form.date_to(class="form-control datepicker", type="datetime-local", placeholder="Datum i vreme do", id="date_to") }}
-                                <button type="button" class="btn btn-danger clear-date" data-target="date_to" title="Očisti datum">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            {{ form.grade_filter.label(class="form-label") }}
-                            {{ form.grade_filter(class="form-select filter-select", id="grade_filter") }}
-                        </div>
-                    </form>
-                </div>
+        <div class="stat-card">
+            <span class="stat-label">Ovog meseca</span>
+            <span class="stat-value">{{ stats.month }}</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Ove nedelje</span>
+            <span class="stat-value">{{ stats.week }}</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Danas</span>
+            <span class="stat-value">{{ stats.today }}</span>
+        </div>
+    </section>
+
+    <form id="filterForm" class="toolbar" autocomplete="off">
+        {{ form.hidden_tag() }}
+
+        <div class="toolbar-field">
+            <label for="date_from">Od datuma</label>
+            <div class="input-wrap">
+                {{ form.date_from(class="field-input", type="datetime-local", id="date_from") }}
+                <button type="button" class="toolbar-clear-btn clear-date" data-target="date_from" title="Očisti" aria-label="Očisti od">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
             </div>
         </div>
-    </div>
-    
-    <!-- Tabela sa prijavama -->
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0 text-white">Lista prijava</h5>
-                        <div class="d-flex">
-                            <a href="{{ url_for('admin.applications_to_pdf') }}" class="btn btn-sm btn-success me-2" target="_blank">
-                                <i class="fas fa-file-export"></i> Eksportuj u PDF
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table id="applicationsTable" class="table table-striped table-hover report-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Ime i prezime deteta</th>
-                                    <th>Razred / Odeljenje</th>
-                                    <th>Ime i prezime roditelja</th>
-                                    <th>Priloženi dokumenti</th>
-                                    <th>Datum prijave</th>
-                                    <th>Akcije</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for application in applications %}
-                                <tr>
-                                    <td>{{ application.id }}</td>
-                                    <td>{{ application.children_name }} {{ application.children_surname }}</td>
-                                    <td>{{ application.grade }} / {{ application.class_number }}</td>
-                                    <td>
-                                        M: {{ application.mother_name }} {{ application.mother_surname }}<br>
-                                        O: {{ application.father_name }} {{ application.father_surname }}
-                                    </td>
-                                    <td>
-                                        {% if application.has_documents %}
-                                            <span class="badge bg-success">Da ({{ application.document_count }})</span>
-                                        {% else %}
-                                            <span class="badge bg-secondary">Ne</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ application.date_submitted.strftime('%d.%m.%Y. %H:%M') }}</td>
-                                    <td>
-                                        <a href="{{ url_for('admin.application_detail', application_id=application.id) }}" class="btn btn-sm btn-outline-primary">Detalji</a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+
+        <div class="toolbar-field">
+            <label for="date_to">Do datuma</label>
+            <div class="input-wrap">
+                {{ form.date_to(class="field-input", type="datetime-local", id="date_to") }}
+                <button type="button" class="toolbar-clear-btn clear-date" data-target="date_to" title="Očisti" aria-label="Očisti do">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
             </div>
         </div>
-    </div>
+
+        <div class="toolbar-field">
+            <label for="grade_filter">Razred</label>
+            {{ form.grade_filter(class="field-select filter-select", id="grade_filter") }}
+        </div>
+
+        <div class="toolbar-actions">
+            <button type="button" class="btn btn-ghost btn-sm" id="clearFiltersBtn">
+                <i class="fas fa-eraser" aria-hidden="true"></i>
+                <span class="btn-label">Očisti filtere</span>
+            </button>
+            <a href="{{ url_for('admin.applications_to_pdf') }}" class="btn btn-accent btn-sm" id="exportBtn" target="_blank" rel="noopener">
+                <i class="fas fa-file-pdf" aria-hidden="true"></i>
+                <span class="btn-label">Eksportuj u PDF</span>
+            </a>
+        </div>
+    </form>
+
+    <section class="table-card">
+        <div class="table-card-head">
+            <h2 class="table-card-title">Lista prijava</h2>
+        </div>
+        <div class="table-card-body">
+            <div class="table-responsive">
+                <table id="applicationsTable" class="table table-hover report-table align-middle">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">ID</th>
+                            <th>Dete</th>
+                            <th style="width: 120px;">Razred</th>
+                            <th>Roditelji</th>
+                            <th style="width: 110px;">Dokumenti</th>
+                            <th style="width: 140px;">Prijavljeno</th>
+                            <th style="width: 100px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<!-- DataTables JS -->
 <script type="text/javascript" src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
 <script type="text/javascript" src="https://cdn.datatables.net/1.13.1/js/dataTables.bootstrap5.min.js"></script>
 <script type="text/javascript" src="https://cdn.datatables.net/responsive/2.4.0/js/dataTables.responsive.min.js"></script>
 <script type="text/javascript" src="https://cdn.datatables.net/responsive/2.4.0/js/responsive.bootstrap5.min.js"></script>
 
 <script>
-    // Inicijalizacija DataTables i filtera
-    $(document).ready(function() {
-        // Kreiranje DataTables instance
-        var table = $('#applicationsTable').DataTable({
-            // Konfiguracijske opcije
-            responsive: true,
-            processing: true,
-            serverSide: true,
-            ajax: {
-                url: "{{ url_for('api.applications') }}",
-                type: "POST",
-                data: function(d) {
-                    // Dodaj filtere iz forme
-                    d.date_from = $('#date_from').val();
-                    d.date_to = $('#date_to').val();
-                    d.grade_filter = $('#grade_filter').val();
-                    return d;
-                }
-            },
-            columns: [
-                { data: "id" },
-                { data: "children_full_name" },
-                { data: "grade_class" },
-                { data: "parents_info" },
-                { data: "documents_info" },
-                { data: "date_submitted" },
-                { data: "actions", orderable: false, searchable: false }
-            ],
-            order: [[5, 'desc']], // Podrazumevano sortiranje po datumu prijave od najnovijeg ka najstarijem
-            language: {
-                url: "https://cdn.datatables.net/plug-ins/1.13.1/i18n/sr-SP.json",
-                search: "",
-                searchPlaceholder: "Pretraži prijave..."
-            },
-            dom: '<"row"<"col-sm-12"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
-            lengthChange: false,
-            pageLength: 20
-        });
-        
-        // Event listeneri za automatsko filtriranje
-        $('.datepicker').on('change', function() {
-            table.draw(); // Ponovo učitaj tabelu sa novim filterima
-        });
-        
-        $('.filter-select').on('change', function() {
-            table.draw(); // Ponovo učitaj tabelu sa novim filterima
-        });
-        
-        // Event listener za čišćenje datuma
-        $('.clear-date').on('click', function() {
-            var targetId = $(this).data('target');
-            $('#' + targetId).val(''); // Očisti vrednost
-            table.draw(); // Ponovo učitaj tabelu
-        });
-        
-        // Ažuriraj export link sa trenutnim filterima
-        table.on('draw', function() {
-            var date_from = $('#date_from').val();
-            var date_to = $('#date_to').val();
-            var grade_filter = $('#grade_filter').val();
-            var search = $('.dataTables_filter input').val(); // Dodaj vrednost pretrage
-            
-            // Koristi applications_to_pdf rutu umesto export_applications
-            var exportUrl = "{{ url_for('admin.applications_to_pdf') }}" +
-                "?date_from=" + (date_from || '') + 
-                "&date_to=" + (date_to || '') + 
-                "&grade_filter=" + (grade_filter || '') +
-                "&search=" + (search || '');
-            
-            $('.btn-success').attr('href', exportUrl);
-        });
+$(document).ready(function() {
+    var table = $('#applicationsTable').DataTable({
+        responsive: true,
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: "{{ url_for('api.applications') }}",
+            type: "POST",
+            data: function(d) {
+                d.date_from = $('#date_from').val();
+                d.date_to = $('#date_to').val();
+                d.grade_filter = $('#grade_filter').val();
+                return d;
+            }
+        },
+        columns: [
+            { data: "id" },
+            { data: "children_full_name" },
+            { data: "grade_class" },
+            { data: "parents_info" },
+            { data: "documents_info" },
+            { data: "date_submitted" },
+            { data: "actions", orderable: false, searchable: false }
+        ],
+        order: [[5, 'desc']],
+        language: {
+            url: "https://cdn.datatables.net/plug-ins/1.13.1/i18n/sr-SP.json",
+            search: "",
+            searchPlaceholder: "Pretraži po imenu..."
+        },
+        dom: '<"row g-0"<"col-sm-12"f>>rt<"row g-0"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+        lengthChange: false,
+        pageLength: 20
     });
+
+    // Auto-apply filters on change
+    $('#date_from, #date_to, #grade_filter').on('change', function() {
+        table.draw();
+    });
+
+    // Clear individual date
+    $('.clear-date').on('click', function() {
+        var targetId = $(this).data('target');
+        $('#' + targetId).val('');
+        table.draw();
+    });
+
+    // Clear all filters
+    $('#clearFiltersBtn').on('click', function() {
+        $('#date_from').val('');
+        $('#date_to').val('');
+        $('#grade_filter').val('');
+        table.search('');
+        table.draw();
+    });
+
+    // Sync export URL with current filters
+    table.on('draw', function() {
+        var params = new URLSearchParams();
+        var df = $('#date_from').val(), dt = $('#date_to').val(),
+            gf = $('#grade_filter').val(), s = $('.dataTables_filter input').val();
+        if (df) params.set('date_from', df);
+        if (dt) params.set('date_to', dt);
+        if (gf) params.set('grade_filter', gf);
+        if (s)  params.set('search', s);
+        var base = "{{ url_for('admin.applications_to_pdf') }}";
+        $('#exportBtn').attr('href', params.toString() ? base + '?' + params.toString() : base);
+    });
+});
 </script>
 {% endblock %}

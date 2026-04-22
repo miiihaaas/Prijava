@@ -1,25 +1,14 @@
 {% extends "layout.html" %}
+{% block title %}Stranica nije pronađena · {{ school_name }}{% endblock %}
+
 {% block content %}
-    <div class="content-section py-5">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-danger text-white">
-                        <h2 class="mb-0 text-white">Stranica nije pronađena (404)</h2>
-                    </div>
-                    <div class="card-body">
-                        <div class="text-center mb-4">
-                            <h1 class="display-1">404</h1>
-                            <p class="lead">Nažalost, stranica koju tražite ne postoji.</p>
-                            <hr>
-                            <p>Možda ste uneli pogrešnu adresu ili je stranica pomerena ili uklonjena.</p>
-                        </div>
-                        <div class="text-center">
-                            <a href="{{ url_for('public.application') }}" class="btn btn-outline-primary">Povratak na početnu stranicu</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<section class="error-screen">
+    <div class="error-num">404</div>
+    <h1 class="error-title">Stranica nije pronađena</h1>
+    <p class="error-lede">Nažalost, stranica koju tražite ne postoji ili je premeštena.</p>
+    <a class="btn btn-primary" href="{{ url_for('public.application') }}">
+        <span class="btn-label">Povratak na formu</span>
+        <span class="btn-arrow" aria-hidden="true">→</span>
+    </a>
+</section>
 {% endblock %}

@@ -1,25 +1,14 @@
 {% extends "layout.html" %}
+{% block title %}Metoda nije dozvoljena · {{ school_name }}{% endblock %}
+
 {% block content %}
-    <div class="content-section py-5">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-warning text-white">
-                        <h2 class="mb-0 text-white">Metoda nije dozvoljena (405)</h2>
-                    </div>
-                    <div class="card-body">
-                        <div class="text-center mb-4">
-                            <h1 class="display-1">405</h1>
-                            <p class="lead">Koristite nedozvoljenu HTTP metodu za pristup ovoj stranici.</p>
-                            <hr>
-                            <p>Molimo koristite odgovarajuću metodu (GET, POST) za pristup ovoj stranici.</p>
-                        </div>
-                        <div class="text-center">
-                            <a href="{{ url_for('public.application') }}" class="btn btn-outline-primary">Povratak na početnu stranicu</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<section class="error-screen">
+    <div class="error-num">405</div>
+    <h1 class="error-title">Akcija nije dozvoljena</h1>
+    <p class="error-lede">Ova vrsta zahteva nije podržana za traženu stranicu.</p>
+    <a class="btn btn-primary" href="{{ url_for('public.application') }}">
+        <span class="btn-label">Povratak na formu</span>
+        <span class="btn-arrow" aria-hidden="true">→</span>
+    </a>
+</section>
 {% endblock %}

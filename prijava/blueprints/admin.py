@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from flask import (
     Blueprint,
@@ -46,7 +46,18 @@ def applications_list():
             form.date_to.data = parse_datetime_local(date_to) if date_to else form.date_to.data
             form.grade_filter.data = grade_filter
 
-        return render_template('applications_list.html', applications=[], form=form)
+        now = datetime.now()
+        today_start = datetime(now.year, now.month, now.day)
+        week_start = today_start - timedelta(days=now.weekday())
+        month_start = datetime(now.year, now.month, 1)
+        stats = {
+            'total': Application.query.count(),
+            'month': Application.query.filter(Application.date_submitted >= month_start).count(),
+            'week': Application.query.filter(Application.date_submitted >= week_start).count(),
+            'today': Application.query.filter(Application.date_submitted >= today_start).count(),
+        }
+
+        return render_template('applications_list.html', applications=[], form=form, stats=stats)
     except SQLAlchemyError as exc:
         current_app.logger.error(f"SQLAlchemy greška pri pristupu listi prijava: {exc}")
         flash('Došlo je do problema pri pristupu bazi podataka. Molimo pokušajte ponovo kasnije.', 'danger')

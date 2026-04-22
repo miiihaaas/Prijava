@@ -1,139 +1,195 @@
 {% extends 'layout.html' %}
+{% block title %}Prijava za produženi boravak · {{ school_name }}{% endblock %}
+
 {% block content %}
-<!-- Loading overlay -->
-<div class="loading-overlay" id="loadingOverlay">
-    <div class="spinner"></div>
-    <p class="loading-message">Molimo vas sačekajte...</p>
-</div>
+<article class="form-article">
+    <header class="form-head">
+        <p class="eyebrow">Prijava · Produženi boravak</p>
+        <h1 class="form-title">Prijavni formular za produženi boravak</h1>
+        <p class="form-lede">Popunite podatke o detetu, roditeljima i priložite potrebnu dokumentaciju. Obrada prijave traje nekoliko minuta.</p>
+    </header>
 
-<div class="container mt-5 mb-5">
-    <h2 class="text-center mb-4">Prijavni formular za produženi boravak</h2>
-    <form method="POST" enctype="multipart/form-data">
+    <form class="application-form" method="POST" enctype="multipart/form-data" novalidate>
         {{ form.hidden_tag() }}
-        <div class="row">
-            <div class="col-md-6">
-                <div class="form-group mb-3">
-                    {{ form.children_name.label(class="form-label") }}
-                    {{ form.children_name(class="form-control", placeholder="Unesite ime deteta") }}
-                    {% for error in form.children_name.errors %}
-                        <div class="text-danger">{{ error }}</div>
-                    {% endfor %}
-                </div>
-                
-                <div class="form-group mb-3">
-                    {{ form.children_surname.label(class="form-label") }}
-                    {{ form.children_surname(class="form-control", placeholder="Unesite prezime deteta") }}
-                    {% for error in form.children_surname.errors %}
-                        <div class="text-danger">{{ error }}</div>
-                    {% endfor %}
-                </div>
-        
-                <div class="form-group mb-3">
-                    {{ form.mother_name.label(class="form-label") }}
-                    {{ form.mother_name(class="form-control", placeholder="Unesite ime majke") }}
-                    {% for error in form.mother_name.errors %}
-                        <div class="text-danger">{{ error }}</div>
-                    {% endfor %}
-                </div>
-        
-                <div class="form-group mb-3">
-                    {{ form.mother_surname.label(class="form-label") }}
-                    {{ form.mother_surname(class="form-control", placeholder="Unesite prezime majke") }}
-                    {% for error in form.mother_surname.errors %}
-                        <div class="text-danger">{{ error }}</div>
-                    {% endfor %}
-                </div>
-        
-                <div class="form-group mb-3">
-                    {{ form.father_name.label(class="form-label") }}
-                    {{ form.father_name(class="form-control", placeholder="Unesite ime oca") }}
-                    {% for error in form.father_name.errors %}
-                        <div class="text-danger">{{ error }}</div>
-                    {% endfor %}
-                </div>
-        
-                <div class="form-group mb-3">
-                    {{ form.father_surname.label(class="form-label") }}
-                    {{ form.father_surname(class="form-control", placeholder="Unesite prezime oca") }}
-                    {% for error in form.father_surname.errors %}
-                        <div class="text-danger">{{ error }}</div>
-                    {% endfor %}
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-group mb-3">
-                    {{ form.grade.label(class="form-label") }}
-                    {{ form.grade(class="form-select") }}
-                    {% for error in form.grade.errors %}
-                        <div class="text-danger">{{ error }}</div>
-                    {% endfor %}
-                </div>
-        
-                <div class="form-group mb-3">
-                    {{ form.class_number.label(class="form-label") }}
-                    {{ form.class_number(class="form-select") }}
-                    {% for error in form.class_number.errors %}
-                        <div class="text-danger">{{ error }}</div>
-                    {% endfor %}
-                </div>
-                
-                <div class="form-group mb-3">
-                    <p>Uz zahtev priloziti sledeću dokumentaciju:</p>
-                    <p>- Potvrda o prijavi na obavezno socijalno osiguranje ( M obrazac) za oba roditelja.</p>
-                    <p>- Ukoliko jedan roditelj samostalno vrši roditeljsko pravo, uz M obrazac dostavlja i dokaz o vršenju roditeljskog prava ( sudska presuda, izvod iz MKU ili drugi dokaz)</p>
-                    <p>- Roditelji koji su zaposleni u inostranstvu, umesto M obrasca  podnose potvrdu o radnom odnosu. Ukoliko je potvrda  na stranom  jeziku, potrebno je dostaviti overen prevod iste.</p>
-                </div>
-        
-                <div class="form-group mb-3">
-                    {{ form.documents.label(class="form-label") }}
-                    {{ form.documents(class="form-control", multiple=True) }}
-                    {% for error in form.documents.errors %}
-                        <div class="text-danger">{{ error }}</div>
-                    {% endfor %}
-                </div>
-                <div class="form-group mb-3">
-                    <div class="form-check">
-                        {{ form.consent(class="form-check-input", id="consentCheckbox") }}
-                        {{ form.consent.label(class="form-check-label", for="consentCheckbox") }}
-                        {% for error in form.consent.errors %}
-                            <div class="text-danger">{{ error }}</div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="form-group">
-            {{ form.submit(class="btn btn-primary", id="submitButton") }}
-        </div>
 
+        <section class="form-section">
+            <div class="section-head">
+                <span class="section-num" aria-hidden="true">01</span>
+                <h2 class="section-title">Podaci o detetu</h2>
+            </div>
+            <div class="field-row">
+                <div class="field">
+                    {{ form.children_name.label(class="field-label") }}
+                    {{ form.children_name(class="field-input" + (" is-error" if form.children_name.errors else ""), placeholder="Unesite ime deteta") }}
+                    {% for error in form.children_name.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+                </div>
+                <div class="field">
+                    {{ form.children_surname.label(class="field-label") }}
+                    {{ form.children_surname(class="field-input" + (" is-error" if form.children_surname.errors else ""), placeholder="Unesite prezime deteta") }}
+                    {% for error in form.children_surname.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field">
+                    {{ form.grade.label(class="field-label") }}
+                    {{ form.grade(class="field-select" + (" is-error" if form.grade.errors else "")) }}
+                    {% for error in form.grade.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+                </div>
+                <div class="field">
+                    {{ form.class_number.label(class="field-label") }}
+                    {{ form.class_number(class="field-select" + (" is-error" if form.class_number.errors else "")) }}
+                    {% for error in form.class_number.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <section class="form-section">
+            <div class="section-head">
+                <span class="section-num" aria-hidden="true">02</span>
+                <h2 class="section-title">Podaci o roditeljima</h2>
+            </div>
+
+            <p class="section-sub">Majka</p>
+            <div class="field-row">
+                <div class="field">
+                    {{ form.mother_name.label(class="field-label") }}
+                    {{ form.mother_name(class="field-input" + (" is-error" if form.mother_name.errors else ""), placeholder="Ime majke") }}
+                    {% for error in form.mother_name.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+                </div>
+                <div class="field">
+                    {{ form.mother_surname.label(class="field-label") }}
+                    {{ form.mother_surname(class="field-input" + (" is-error" if form.mother_surname.errors else ""), placeholder="Prezime majke") }}
+                    {% for error in form.mother_surname.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+                </div>
+            </div>
+
+            <p class="section-sub">Otac</p>
+            <div class="field-row">
+                <div class="field">
+                    {{ form.father_name.label(class="field-label") }}
+                    {{ form.father_name(class="field-input" + (" is-error" if form.father_name.errors else ""), placeholder="Ime oca") }}
+                    {% for error in form.father_name.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+                </div>
+                <div class="field">
+                    {{ form.father_surname.label(class="field-label") }}
+                    {{ form.father_surname(class="field-input" + (" is-error" if form.father_surname.errors else ""), placeholder="Prezime oca") }}
+                    {% for error in form.father_surname.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <section class="form-section">
+            <div class="section-head">
+                <span class="section-num" aria-hidden="true">03</span>
+                <h2 class="section-title">Dokumentacija</h2>
+            </div>
+
+            <div class="docs-notes">
+                <p>Uz zahtev priložite sledeću dokumentaciju:</p>
+                <ul>
+                    <li>Potvrdu o prijavi na obavezno socijalno osiguranje (M obrazac) za oba roditelja.</li>
+                    <li>Ukoliko jedan roditelj samostalno vrši roditeljsko pravo, uz M obrazac dostavlja se i dokaz o vršenju roditeljskog prava (sudska presuda, izvod iz MKU ili drugi dokaz).</li>
+                    <li>Roditelji zaposleni u inostranstvu umesto M obrasca podnose potvrdu o radnom odnosu. Ukoliko je potvrda na stranom jeziku, potrebno je priložiti overen prevod.</li>
+                </ul>
+            </div>
+
+            <div class="field field--file">
+                {{ form.documents.label(class="field-label") }}
+                <label class="file-drop" for="documents">
+                    <span class="file-drop-icon" aria-hidden="true"><i class="fas fa-paperclip"></i></span>
+                    <span class="file-drop-text">
+                        <span class="file-drop-main">Kliknite da izaberete fajlove</span>
+                        <span class="file-drop-meta">PDF, JPG ili PNG · ukupno do 10 MB</span>
+                    </span>
+                    {{ form.documents(class="file-input", id="documents", multiple=True) }}
+                </label>
+                <ul class="file-list" id="fileList" aria-live="polite"></ul>
+                {% for error in form.documents.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+            </div>
+        </section>
+
+        <section class="form-section form-section--submit">
+            <div class="consent-row">
+                {{ form.consent(class="consent-check", id="consentCheckbox") }}
+                {{ form.consent.label(class="consent-label", for="consentCheckbox") }}
+            </div>
+            {% for error in form.consent.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+
+            <div class="submit-row">
+                <p class="submit-hint">Proverite da su svi podaci tačni pre slanja. Prijava se ne može naknadno izmeniti.</p>
+                <button type="submit" class="btn btn-primary btn-lg" id="submitButton" disabled>
+                    <span class="btn-spinner" aria-hidden="true"></span>
+                    <span class="btn-label">Pošalji prijavu</span>
+                    <span class="btn-arrow" aria-hidden="true">→</span>
+                </button>
+            </div>
+        </section>
     </form>
+</article>
+
+<div class="loading-overlay" id="loadingOverlay" aria-hidden="true">
+    <div class="loader"><span class="loader-bar"></span></div>
+    <p class="loader-msg">Slanje prijave...</p>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var consentCheckbox = document.getElementById('consentCheckbox');
-        var submitButton = document.getElementById('submitButton');
-        var form = document.querySelector('form');
-        var loadingOverlay = document.getElementById('loadingOverlay');
-    
-        // Disable submit button initially
-        submitButton.disabled = !consentCheckbox.checked;
-    
-        // Add event listener to checkbox
-        consentCheckbox.addEventListener('change', function() {
-            submitButton.disabled = !consentCheckbox.checked;
-        });
-        
-        // Prikaži loading overlay samo kada se forma pošalje
-        form.addEventListener('submit', function(e) {
-            // Proveri da li je forma validna
-            if (form.checkValidity()) {
-                // Aktiviraj loading overlay
-                loadingOverlay.classList.add('active');
-            }
-        });
+(function(){
+  var form = document.querySelector('.application-form');
+  if (!form) return;
+
+  var consent = document.getElementById('consentCheckbox');
+  var submitBtn = document.getElementById('submitButton');
+  var overlay = document.getElementById('loadingOverlay');
+  var fileInput = document.getElementById('documents');
+  var fileList = document.getElementById('fileList');
+
+  // Consent gate
+  if (consent && submitBtn) {
+    var syncConsent = function(){ submitBtn.disabled = !consent.checked; };
+    syncConsent();
+    consent.addEventListener('change', syncConsent);
+  }
+
+  // File list preview
+  if (fileInput && fileList) {
+    fileInput.addEventListener('change', function(){
+      fileList.innerHTML = '';
+      Array.from(fileInput.files).forEach(function(f){
+        var li = document.createElement('li');
+        li.className = 'file-item';
+        li.innerHTML = '<span class="file-name"><i class="fas fa-file"></i> <span>' + escapeHTML(f.name) + '</span></span><span class="file-size">' + formatSize(f.size) + '</span>';
+        fileList.appendChild(li);
+      });
     });
-    </script>
+  }
+
+  // Submit disable + loading overlay + button state
+  form.addEventListener('submit', function(){
+    if (!form.checkValidity()) return;
+    submitBtn.disabled = true;
+    submitBtn.classList.add('is-loading');
+    submitBtn.querySelector('.btn-label').textContent = 'Slanje prijave...';
+    if (overlay) {
+      overlay.classList.add('is-active');
+      overlay.setAttribute('aria-hidden', 'false');
+    }
+  });
+
+  // Scroll to first server-rendered error
+  var firstErr = form.querySelector('.field-error');
+  if (firstErr) {
+    var field = firstErr.closest('.field') || firstErr;
+    setTimeout(function(){ field.scrollIntoView({behavior:'smooth', block:'center'}); }, 80);
+  }
+
+  function escapeHTML(s){ var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+  function formatSize(b){
+    if (b<1024) return b+' B';
+    if (b<1048576) return (b/1024).toFixed(0)+' KB';
+    return (b/1048576).toFixed(1)+' MB';
+  }
+})();
+</script>
 {% endblock %}

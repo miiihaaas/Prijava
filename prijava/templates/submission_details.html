@@ -1,102 +1,69 @@
 {% extends "layout.html" %}
+{% block title %}Prijava #{{ application.id }} · {{ school_name }}{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <div class="row mb-3">
-        <div class="col-md-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <h2>Potvrda uspešno poslate prijave</h2>
-            </div>
+<article class="confirm-article">
+    <header class="confirm-head">
+        {% if is_duplicate %}
+            <p class="eyebrow eyebrow--warn">Obaveštenje · Duplikat</p>
+            <h1 class="confirm-title">Prijava već postoji u sistemu</h1>
+            <p class="confirm-lede">Identična prijava je ranije primljena. U nastavku su podaci postojeće prijave.</p>
+        {% else %}
+            <p class="eyebrow eyebrow--success">Prijava primljena</p>
+            <h1 class="confirm-title">Hvala vam — prijava je sačuvana</h1>
+            <p class="confirm-lede">Evidentirali smo vašu prijavu. Škola će vas kontaktirati u narednim danima.</p>
+        {% endif %}
+    </header>
+
+    <aside class="receipt">
+        <div class="receipt-num">
+            <span class="receipt-label">Broj prijave</span>
+            <span class="receipt-id">#{{ application.id }}</span>
         </div>
-    </div>
-    
-    {% if is_duplicate %}
-    <div class="alert alert-warning" role="alert">
-        <strong>Obaveštenje!</strong> Identična prijava već postoji u sistemu. Ovo su podaci postojeće prijave.
-    </div>
-{% else %}
-    <div class="alert alert-success" role="alert">
-        <strong>Uspešno!</strong> Vaša prijava je primljena i sačuvana u našoj bazi podataka.
-    </div>
-{% endif %}
-    
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="text-white">Podaci o detetu</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>Ime:</strong> {{ application.children_name }}</p>
-                            <p><strong>Prezime:</strong> {{ application.children_surname }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><strong>Razred:</strong> {{ application.grade }}</p>
-                            <p><strong>Odeljenje:</strong> {{ application.class_number }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="text-white">Podaci o roditeljima</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6>Majka</h6>
-                            <p><strong>Ime:</strong> {{ application.mother_name }}</p>
-                            <p><strong>Prezime:</strong> {{ application.mother_surname }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6>Otac</h6>
-                            <p><strong>Ime:</strong> {{ application.father_name }}</p>
-                            <p><strong>Prezime:</strong> {{ application.father_surname }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="text-white">Dodatne informacije</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p>
-                                <strong>Priloženi dokumenti:</strong> 
-                                {% if application.has_documents %}
-                                    <span class="badge bg-success">Da ({{ application.document_count }})</span>
-                                {% else %}
-                                    <span class="badge bg-secondary">Ne</span>
-                                {% endif %}
-                            </p>
-                            <p>
-                                <strong>Saglasnost:</strong> 
-                                {% if application.consent %}
-                                    <span class="badge bg-success">Data saglasnost</span>
-                                {% else %}
-                                    <span class="badge bg-danger">Nije data saglasnost</span>
-                                {% endif %}
-                            </p>
-                        </div>
-                        <div class="col-md-6">
-                            <p>
-                                <strong>Datum i vreme prijave:</strong> 
-                                {{ application.date_submitted.strftime('%d.%m.%Y. %H:%M:%S') }}
-                            </p>
-                            <p>
-                                <strong>ID prijave:</strong> 
-                                <span class="badge bg-primary">{{ application.id }}</span>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="receipt-meta">
+            <span class="receipt-date">{{ application.date_submitted.strftime('%d.%m.%Y. %H:%M') }}</span>
         </div>
+    </aside>
+
+    <section class="summary">
+        <div class="summary-row"><span class="summary-key">Dete</span><span class="summary-val">{{ application.children_name }} {{ application.children_surname }}</span></div>
+        <div class="summary-row"><span class="summary-key">Razred / Odeljenje</span><span class="summary-val">{{ application.grade }} / {{ application.class_number }}</span></div>
+        <div class="summary-row"><span class="summary-key">Majka</span><span class="summary-val">{{ application.mother_name }} {{ application.mother_surname }}</span></div>
+        <div class="summary-row"><span class="summary-key">Otac</span><span class="summary-val">{{ application.father_name }} {{ application.father_surname }}</span></div>
+        <div class="summary-row">
+            <span class="summary-key">Dokumentacija</span>
+            <span class="summary-val">
+                {% if application.has_documents %}
+                    {{ application.document_count }} fajl{% if application.document_count == 1 %}{% else %}ova{% endif %} priloženo
+                {% else %}
+                    Nije priloženo
+                {% endif %}
+            </span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-key">Saglasnost</span>
+            <span class="summary-val">{% if application.consent %}Data{% else %}Nije data{% endif %}</span>
+        </div>
+    </section>
+
+    <section class="next-steps">
+        <h2 class="next-title">Šta dalje?</h2>
+        <ol class="next-list">
+            <li><strong>Obrada.</strong> Škola pregledava pristigle prijave i priloženu dokumentaciju.</li>
+            <li><strong>Potvrda.</strong> Dobićete odgovor od škole čim prijava bude obrađena.</li>
+            <li><strong>Pitanja?</strong> Kontaktirajte školu telefonom ili mejlom navedenim u dnu stranice.</li>
+        </ol>
+    </section>
+
+    <div class="confirm-actions">
+        <button type="button" class="btn btn-ghost" onclick="window.print()">
+            <i class="fas fa-print" aria-hidden="true"></i>
+            <span class="btn-label">Odštampaj potvrdu</span>
+        </button>
+        <a class="btn btn-subtle" href="{{ url_for('public.application') }}">
+            <span class="btn-label">Nova prijava</span>
+            <span class="btn-arrow" aria-hidden="true">→</span>
+        </a>
     </div>
-</div>
+</article>
 {% endblock %}

@@ -61,18 +61,18 @@ def applications():
                 'children_full_name': f"{app_row.children_name} {app_row.children_surname}",
                 'grade_class': f"{app_row.grade} / {app_row.class_number}",
                 'parents_info': (
-                    f"M: {app_row.mother_name} {app_row.mother_surname}<br>"
-                    f"O: {app_row.father_name} {app_row.father_surname}"
+                    f'<span class="parents-line"><span class="parents-label">M</span> {app_row.mother_name} {app_row.mother_surname}</span><br>'
+                    f'<span class="parents-line"><span class="parents-label">O</span> {app_row.father_name} {app_row.father_surname}</span>'
                 ),
                 'documents_info': (
-                    f'<span class="badge bg-success">Da ({app_row.document_count})</span>'
+                    f'<span class="chip chip--ok"><i class="fas fa-check"></i> {app_row.document_count}</span>'
                     if app_row.has_documents
-                    else '<span class="badge bg-secondary">Ne</span>'
+                    else '<span class="chip chip--muted">Nema</span>'
                 ),
                 'date_submitted': app_row.date_submitted.strftime('%d.%m.%Y. %H:%M'),
                 'actions': (
                     f'<a href="{url_for("admin.application_detail", application_id=app_row.id)}" '
-                    f'class="btn btn-sm btn-outline-primary">Detalji</a>'
+                    f'class="btn btn-outline-primary btn-sm">Detalji</a>'
                 ),
             })
 

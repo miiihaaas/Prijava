@@ -1,102 +1,137 @@
 {% extends "layout.html" %}
+{% block title %}Prijava #{{ application.id }} · Administracija · {{ school_name }}{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <div class="row mb-3">
-        <div class="col-md-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <h2>Detalji prijave #{{ application.id }}</h2>
-                <div>
-                    <a href="{{ url_for('admin.applications_list') }}" class="btn btn-secondary">Nazad na listu</a>
-                </div>
-            </div>
+<div class="admin-page layout-narrow">
+    <a class="admin-back" href="{{ url_for('admin.applications_list') }}">
+        <i class="fas fa-arrow-left" aria-hidden="true"></i>
+        <span>Nazad na listu prijava</span>
+    </a>
+
+    <header class="admin-head">
+        <p class="eyebrow">Administracija · Detalji prijave</p>
+        <h1>{{ application.children_name }} {{ application.children_surname }}</h1>
+        <p class="admin-lede">{{ application.grade }}. razred, {{ application.class_number }}. odeljenje · prijavljeno {{ application.date_submitted.strftime('%d.%m.%Y. u %H:%M') }}</p>
+    </header>
+
+    <aside class="receipt">
+        <div class="receipt-num">
+            <span class="receipt-label">Broj prijave</span>
+            <span class="receipt-id">#{{ application.id }}</span>
         </div>
+        <div class="receipt-meta">
+            {% if application.consent %}
+                <span class="chip chip--ok"><i class="fas fa-check"></i> Saglasnost data</span>
+            {% else %}
+                <span class="chip chip--danger">Bez saglasnosti</span>
+            {% endif %}
+            <br>
+            <span class="receipt-date">{{ application.date_submitted.strftime('%d.%m.%Y. %H:%M') }}</span>
+        </div>
+    </aside>
+
+    <div class="detail-actions">
+        <button type="button" class="btn btn-ghost btn-sm" onclick="window.print()">
+            <i class="fas fa-print" aria-hidden="true"></i>
+            <span class="btn-label">Odštampaj</span>
+        </button>
+        <a href="{{ url_for('admin.applications_list') }}" class="btn btn-subtle btn-sm">
+            <i class="fas fa-list" aria-hidden="true"></i>
+            <span class="btn-label">Sve prijave</span>
+        </a>
     </div>
-    
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="text-white">Podaci o detetu</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>Ime:</strong> {{ application.children_name }}</p>
-                            <p><strong>Prezime:</strong> {{ application.children_surname }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><strong>Razred:</strong> {{ application.grade }}</p>
-                            <p><strong>Odeljenje:</strong> {{ application.class_number }}</p>
-                        </div>
-                    </div>
-                </div>
+
+    <section class="detail-block">
+        <div class="detail-block-head">
+            <span class="section-num" aria-hidden="true">01</span>
+            <span>Dete</span>
+        </div>
+        <div class="detail-block-body">
+            <div class="summary" style="border: none; border-radius: 0; margin: 0;">
+                <div class="summary-row"><span class="summary-key">Ime i prezime</span><span class="summary-val">{{ application.children_name }} {{ application.children_surname }}</span></div>
+                <div class="summary-row"><span class="summary-key">Razred</span><span class="summary-val">{{ application.grade }}. razred</span></div>
+                <div class="summary-row"><span class="summary-key">Odeljenje</span><span class="summary-val">{{ application.class_number }}. odeljenje</span></div>
             </div>
-            
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="text-white">Podaci o roditeljima</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6>Majka</h6>
-                            <p><strong>Ime:</strong> {{ application.mother_name }}</p>
-                            <p><strong>Prezime:</strong> {{ application.mother_surname }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6>Otac</h6>
-                            <p><strong>Ime:</strong> {{ application.father_name }}</p>
-                            <p><strong>Prezime:</strong> {{ application.father_surname }}</p>
-                        </div>
-                    </div>
-                </div>
+        </div>
+    </section>
+
+    <section class="detail-block">
+        <div class="detail-block-head">
+            <span class="section-num" aria-hidden="true">02</span>
+            <span>Roditelji</span>
+        </div>
+        <div class="detail-block-body">
+            <div class="summary" style="border: none; border-radius: 0; margin: 0;">
+                <div class="summary-row"><span class="summary-key">Majka</span><span class="summary-val">{{ application.mother_name }} {{ application.mother_surname }}</span></div>
+                <div class="summary-row"><span class="summary-key">Otac</span><span class="summary-val">{{ application.father_name }} {{ application.father_surname }}</span></div>
             </div>
-            
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="text-white">Dodatne informacije</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p>
-                                <strong>Priloženi dokumenti:</strong> 
-                                {% if application.has_documents %}
-                                    <div class="mt-2">
-                                        {% set attachment_files = application.attachment_paths|from_json if application.attachment_paths else [] %}
-                                        {% if attachment_files %}
-                                            {% for file in attachment_files %}
-                                                <a href="{{ url_for('static', filename=file.path.replace('static/', '')) }}" target="_blank" class="btn btn-sm btn-outline-primary me-2 mb-2">
-                                                    <i class="fas fa-file-alt"></i> {{ file.filename }}
-                                                </a>
-                                            {% endfor %}
-                                        {% else %}
-                                            <span class="badge bg-success">Da ({{ application.document_count }})</span>
-                                        {% endif %}
-                                    </div>
-                                {% else %}
-                                    <span class="badge bg-secondary">Ne</span>
-                                {% endif %}
-                            </p>
-                            <p>
-                                <strong>Saglasnost:</strong> 
-                                {% if application.consent %}
-                                    <span class="badge bg-success">Data saglasnost</span>
-                                {% else %}
-                                    <span class="badge bg-danger">Nije data saglasnost</span>
-                                {% endif %}
-                            </p>
-                        </div>
-                        <div class="col-md-6">
-                            <p>
-                                <strong>Datum i vreme prijave:</strong> 
-                                {{ application.date_submitted.strftime('%d.%m.%Y. %H:%M:%S') }}
-                            </p>
-                        </div>
+        </div>
+    </section>
+
+    <section class="detail-block">
+        <div class="detail-block-head">
+            <span class="section-num" aria-hidden="true">03</span>
+            <span>Dokumentacija</span>
+        </div>
+        <div class="detail-block-body">
+            {% if application.has_documents %}
+                {% set attachment_files = application.attachment_paths|from_json if application.attachment_paths else [] %}
+                {% if attachment_files %}
+                    <ul class="attach-list">
+                        {% for file in attachment_files %}
+                            <li>
+                                <span class="attach-name">
+                                    <span class="attach-icon" aria-hidden="true"><i class="fas fa-file-alt"></i></span>
+                                    <span>{{ file.filename }}</span>
+                                </span>
+                                <span class="attach-actions">
+                                    <a href="{{ url_for('static', filename=file.path.replace('static/', '')) }}" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+                                        <span class="btn-label">Otvori</span>
+                                    </a>
+                                </span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="attach-empty">
+                        <i class="fas fa-check-circle" aria-hidden="true"></i>
+                        <span>Roditelj je označio da je priložena dokumentacija ({{ application.document_count }} fajl{% if application.document_count == 1 %}{% else %}ova{% endif %}), ali podaci o fajlovima nisu dostupni.</span>
                     </div>
+                {% endif %}
+            {% else %}
+                <div class="attach-empty">
+                    <i class="fas fa-inbox" aria-hidden="true"></i>
+                    <span>Roditelj nije priložio dokumentaciju uz prijavu.</span>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="detail-block detail-block--hi">
+        <div class="detail-block-body">
+            <div class="detail-grid">
+                <div>
+                    <p class="eyebrow" style="margin-bottom: var(--sp-2);">Status saglasnosti</p>
+                    {% if application.consent %}
+                        <span class="chip chip--ok"><i class="fas fa-check" aria-hidden="true"></i> Saglasnost za obradu podataka je data</span>
+                    {% else %}
+                        <span class="chip chip--danger">Saglasnost nije data</span>
+                    {% endif %}
+                </div>
+                <div>
+                    <p class="eyebrow" style="margin-bottom: var(--sp-2);">Vreme prijave</p>
+                    <p style="margin: 0; font-variant-numeric: tabular-nums; color: var(--ink-2);">{{ application.date_submitted.strftime('%A, %d.%m.%Y.') }} u {{ application.date_submitted.strftime('%H:%M') }}</p>
                 </div>
             </div>
         </div>
+    </section>
+
+    <div class="detail-actions" style="margin-top: var(--sp-6); margin-bottom: 0;">
+        <a href="{{ url_for('admin.applications_list') }}" class="btn btn-ghost btn-sm">
+            <i class="fas fa-arrow-left" aria-hidden="true"></i>
+            <span class="btn-label">Nazad na listu</span>
+        </a>
     </div>
 </div>
 {% endblock %}
