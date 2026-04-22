@@ -41,6 +41,15 @@ class ApplicationForm(FlaskForm):
     
     submit = SubmitField('Pošalji')
 
+class SettingsForm(FlaskForm):
+    application_open_date = DateTimeField(
+        'Datum otvaranja prijava',
+        validators=[],
+        format='%Y-%m-%dT%H:%M',
+    )
+    submit = SubmitField('Sačuvaj')
+
+
 class SearchForm(FlaskForm):
     search_term = StringField('Pretraga', validators=[])
     date_from = DateTimeField('Od datuma i vremena', validators=[], format='%Y-%m-%dT%H:%M')

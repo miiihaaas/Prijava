@@ -16,8 +16,9 @@ from sqlalchemy import asc, desc
 from sqlalchemy.exc import SQLAlchemyError
 import io
 
-from prijava.form import SearchForm
-from prijava.models import Application
+from prijava import db
+from prijava.form import SearchForm, SettingsForm
+from prijava.models import Application, AppConfig
 from prijava.services.filters import apply_application_filters, parse_datetime_local
 from prijava.services.pdf import render_applications_pdf
 
@@ -136,6 +137,42 @@ def export_applications():
         current_app.logger.error(f"SQLAlchemy greška pri eksportovanju prijava: {exc}")
         flash('Došlo je do problema pri pristupu bazi podataka. Molimo pokušajte ponovo kasnije.', 'danger')
         return redirect(url_for('admin.applications_list'))
+
+
+@admin_bp.route('/admin/settings', methods=['GET', 'POST'])
+@login_required
+def settings():
+    try:
+        config = AppConfig.get()
+        form = SettingsForm(obj=config)
+
+        if form.validate_on_submit():
+            config.application_open_date = form.application_open_date.data
+            db.session.commit()
+            flash('Podešavanja su sačuvana.', 'success')
+            return redirect(url_for('admin.settings'))
+
+        return render_template('admin_settings.html', form=form, config=config)
+    except SQLAlchemyError as exc:
+        current_app.logger.error(f"SQLAlchemy greška pri pristupu podešavanjima: {exc}")
+        db.session.rollback()
+        flash('Došlo je do problema pri pristupu podešavanjima. Molimo pokušajte ponovo kasnije.', 'danger')
+        return redirect(url_for('admin.applications_list'))
+
+
+@admin_bp.route('/admin/settings/clear_open_date', methods=['POST'])
+@login_required
+def clear_open_date():
+    try:
+        config = AppConfig.get()
+        config.application_open_date = None
+        db.session.commit()
+        flash('Datum otvaranja je obrisan — prijave su otvorene.', 'success')
+    except SQLAlchemyError as exc:
+        current_app.logger.error(f"Greška pri brisanju datuma otvaranja: {exc}")
+        db.session.rollback()
+        flash('Došlo je do problema pri brisanju datuma.', 'danger')
+    return redirect(url_for('admin.settings'))
 
 
 @admin_bp.route('/admin/applications_to_pdf')

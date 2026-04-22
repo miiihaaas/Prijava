@@ -1,0 +1,148 @@
+{% extends 'layout.html' %}
+{% block title %}Prijava za produženi boravak · {{ school_name }}{% endblock %}
+
+{% block head %}
+<style>
+.countdown-screen {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: var(--sp-7) var(--sp-5);
+    text-align: center;
+    animation: reveal .5s cubic-bezier(.2,.8,.25,1) both;
+}
+.countdown-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(2rem, 1.4rem + 2vw, 3rem);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: var(--sp-3);
+}
+.countdown-lede {
+    color: var(--ink-3);
+    margin: 0 auto var(--sp-6);
+    max-width: 520px;
+}
+.countdown-target {
+    font-family: var(--font-display);
+    color: var(--brand-accent);
+    font-weight: 600;
+    font-variation-settings: "opsz" 60;
+}
+.countdown-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--sp-3);
+    margin: var(--sp-6) auto;
+    max-width: 620px;
+}
+.countdown-cell {
+    background: #fff;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-lg);
+    padding: var(--sp-4) var(--sp-3);
+    box-shadow: 0 1px 0 rgba(16, 78, 151, 0.03);
+}
+.countdown-num {
+    display: block;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-variation-settings: "opsz" 100;
+    font-size: clamp(2rem, 1.4rem + 2.4vw, 3.25rem);
+    line-height: 1;
+    color: var(--ink-primary);
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+}
+.countdown-label {
+    display: block;
+    margin-top: var(--sp-2);
+    font-size: var(--fs-caption);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-3);
+}
+.countdown-note {
+    color: var(--ink-4);
+    font-size: var(--fs-body-sm);
+    margin-top: var(--sp-5);
+}
+@media (max-width: 480px) {
+    .countdown-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="countdown-screen">
+    {% if is_open %}
+        <p class="eyebrow">Prijava · Produženi boravak</p>
+        <h1 class="countdown-title">Prijave su otvorene</h1>
+        <p class="countdown-lede">Popunite prijavni formular i priložite potrebnu dokumentaciju. Obrada prijave traje nekoliko minuta.</p>
+        <a class="btn btn-primary btn-lg" href="{{ url_for('public.application') }}">
+            <span class="btn-label">Otvori prijavni formular</span>
+            <span class="btn-arrow" aria-hidden="true">→</span>
+        </a>
+    {% else %}
+        <p class="eyebrow">Prijava · Produženi boravak</p>
+        <h1 class="countdown-title">Prijave još nisu otvorene</h1>
+        <p class="countdown-lede">
+            Formular će biti dostupan od
+            <span class="countdown-target">{{ open_date.strftime('%d.%m.%Y.') }}</span>
+            u
+            <span class="countdown-target">{{ open_date.strftime('%H:%M') }}</span>.
+        </p>
+
+        <div class="countdown-grid" id="countdown" aria-live="polite" aria-atomic="true" data-target="{{ open_date_iso }}">
+            <div class="countdown-cell"><span class="countdown-num" data-unit="days">—</span><span class="countdown-label">Dana</span></div>
+            <div class="countdown-cell"><span class="countdown-num" data-unit="hours">—</span><span class="countdown-label">Sati</span></div>
+            <div class="countdown-cell"><span class="countdown-num" data-unit="minutes">—</span><span class="countdown-label">Minuta</span></div>
+            <div class="countdown-cell"><span class="countdown-num" data-unit="seconds">—</span><span class="countdown-label">Sekundi</span></div>
+        </div>
+
+        <p class="countdown-note">Stranica će se automatski osvežiti kada prijave budu otvorene.</p>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block scripts %}
+{% if not is_open %}
+<script>
+(function(){
+    var el = document.getElementById('countdown');
+    if (!el) return;
+    var target = new Date(el.dataset.target).getTime();
+    if (isNaN(target)) return;
+
+    var cells = {
+        days: el.querySelector('[data-unit="days"]'),
+        hours: el.querySelector('[data-unit="hours"]'),
+        minutes: el.querySelector('[data-unit="minutes"]'),
+        seconds: el.querySelector('[data-unit="seconds"]')
+    };
+
+    function pad(n){ return n < 10 ? '0' + n : '' + n; }
+
+    function tick(){
+        var diff = target - Date.now();
+        if (diff <= 0) {
+            window.location.reload();
+            return;
+        }
+        var s = Math.floor(diff / 1000);
+        var days = Math.floor(s / 86400);
+        var hours = Math.floor((s % 86400) / 3600);
+        var minutes = Math.floor((s % 3600) / 60);
+        var seconds = s % 60;
+        cells.days.textContent = days;
+        cells.hours.textContent = pad(hours);
+        cells.minutes.textContent = pad(minutes);
+        cells.seconds.textContent = pad(seconds);
+    }
+
+    tick();
+    setInterval(tick, 1000);
+})();
+</script>
+{% endif %}
+{% endblock %}

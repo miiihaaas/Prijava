@@ -78,3 +78,25 @@ class Application(db.Model):
             'consent': self.consent,
             'date_submitted': self.date_submitted.strftime('%Y-%m-%d %H:%M:%S')
         }
+
+
+class AppConfig(db.Model):
+    __tablename__ = 'app_config'
+
+    id = db.Column(db.Integer, primary_key=True)
+    application_open_date = db.Column(db.DateTime, nullable=True)
+
+    @classmethod
+    def get(cls):
+        config = cls.query.first()
+        if config is None:
+            config = cls()
+            db.session.add(config)
+            db.session.commit()
+        return config
+
+    def is_application_open(self, now=None):
+        if self.application_open_date is None:
+            return True
+        current = now or datetime.now()
+        return current >= self.application_open_date

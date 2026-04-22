@@ -14,7 +14,7 @@ from flask import (
 from sqlalchemy.exc import SQLAlchemyError
 
 from prijava.form import ApplicationForm
-from prijava.models import Application
+from prijava.models import AppConfig, Application
 from prijava.services.applications import persist_attachments, save_application
 from prijava.tasks import send_email_task
 
@@ -42,14 +42,26 @@ def _enqueue_email_async(form_data_copy, application_id, logger):
 public_bp = Blueprint('public', __name__)
 
 
-@public_bp.route('/', methods=['GET', 'POST'])
-@public_bp.route('/application_form', methods=['GET', 'POST'])
+@public_bp.route('/', methods=['GET'])
+@public_bp.route('/application_form', methods=['GET'])
 def index():
-    return "Forma za aplikaciju je privremeno nedostupna."
+    config = AppConfig.get()
+    open_date = config.application_open_date
+    is_open = config.is_application_open()
+    return render_template(
+        'index.html',
+        open_date=open_date,
+        is_open=is_open,
+        open_date_iso=open_date.isoformat() if open_date else None,
+    )
 
 
 @public_bp.route('/application', methods=['GET', 'POST'])
 def application():
+    config = AppConfig.get()
+    if not config.is_application_open():
+        return redirect(url_for('public.index'))
+
     if request.method == 'GET':
         session['form_id'] = str(datetime.utcnow().timestamp())
 

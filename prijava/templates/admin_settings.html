@@ -1,0 +1,80 @@
+{% extends "layout.html" %}
+{% block title %}Podešavanja · Administracija · {{ school_name }}{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <header class="admin-head">
+        <p class="eyebrow">Administracija · Podešavanja</p>
+        <h1>Podešavanja aplikacije</h1>
+        <p class="admin-lede">Podesite datum i vreme otvaranja prijava. Pre tog datuma, posetioci vide countdown na naslovnoj; forma za prijavu biće nedostupna. Ako polje ostavite prazno, prijave su otvorene odmah.</p>
+    </header>
+
+    <section class="table-card">
+        <div class="table-card-head">
+            <h2 class="table-card-title">Datum otvaranja prijava</h2>
+        </div>
+        <div class="table-card-body">
+            <form method="POST" autocomplete="off" class="application-form" style="padding: 1rem;">
+                {{ form.hidden_tag() }}
+
+                <div class="field">
+                    {{ form.application_open_date.label(class="field-label") }}
+                    <div class="input-wrap">
+                        {{ form.application_open_date(class="field-input", type="datetime-local", id="application_open_date") }}
+                        <button type="button" class="toolbar-clear-btn clear-date" data-target="application_open_date" title="Očisti polje" aria-label="Očisti polje">
+                            <i class="fas fa-times" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    {% if config.application_open_date %}
+                        <span class="field-hint">Trenutno postavljeno: <strong>{{ config.application_open_date.strftime('%d.%m.%Y. %H:%M') }}</strong></span>
+                    {% else %}
+                        <span class="field-hint">Trenutno nije postavljeno — prijave su otvorene.</span>
+                    {% endif %}
+                </div>
+
+                <div class="submit-row" style="margin-top: 1.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                    {{ form.submit(class="btn btn-primary") }}
+                    {% if config.application_open_date %}
+                        <button type="submit" class="btn btn-ghost" formaction="{{ url_for('admin.clear_open_date') }}">
+                            <i class="fas fa-eraser" aria-hidden="true"></i>
+                            <span class="btn-label">Obriši datum (otvori prijave)</span>
+                        </button>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/sr.js"></script>
+<script>
+$(document).ready(function() {
+    flatpickr('#application_open_date', {
+        enableTime: true,
+        time_24hr: true,
+        dateFormat: "Y-m-d\\TH:i",
+        altInput: true,
+        altFormat: "d.m.Y. H:i",
+        locale: flatpickr.l10ns.sr,
+        allowInput: false
+    });
+
+    $('.clear-date').on('click', function() {
+        var targetId = $(this).data('target');
+        var el = document.getElementById(targetId);
+        if (el && el._flatpickr) {
+            el._flatpickr.clear();
+        } else {
+            $('#' + targetId).val('');
+        }
+    });
+});
+</script>
+{% endblock %}
